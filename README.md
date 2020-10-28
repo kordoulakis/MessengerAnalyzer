@@ -27,10 +27,10 @@
     <img src="images/logo.png" alt="Logo" width="450" height="240">
   </a>
 
-  <h3 align="center">The Messenger Project</h3>
+  <h3 align="center">Messenger Analyzer</h3>
 
   <p align="center">
-    An analyzer for messages
+    An analyzer of messages
     <br />
     <a href="https://github.com/ShadehaterCS/TheMessengerProject"><strong>Explore the docs »</strong></a>
     <br />
@@ -62,15 +62,13 @@
 
 [![Product Name Screen Shot][product-screenshot]](https://example.com)
 
-**An analysis tool**
-
-
+**An analysis tool**  
 ### Built With
 
 * []()Python 3
 * []()matplotlib
 * []()NumPy
-
+**Does NOT use networking of any kind**
 
 
 <!-- GETTING STARTED -->
@@ -89,6 +87,10 @@ python -m pip install -U matplotlib
 ```sh
 python -m pip install -U numpy
 ```
+* Your FB data
+```sh
+see instructions below
+```
 
 ### Installation
 
@@ -96,13 +98,9 @@ python -m pip install -U numpy
 ```sh
 git clone https://github.com/github_username/repo_name.git
 ```
-2. Install pip packages OR goto (3)
+2. Install pip packages
 ```sh
 pip install -r requirements.txt
-```
-3. Use venv
-```sh
-set up venv through vscode
 ```
 
 <!-- USAGE EXAMPLES -->
@@ -110,11 +108,29 @@ set up venv through vscode
 
 You can use these scripts for structuring, extracting and visualizing your data taken from Facebook's Messenger.
 
-#TODO Add complete guide when the structure of the project and the CLI is actually complete
-<!--_For more examples, please refer to the [Documentation](https://example.com)_ -->
+The main use of this tool is to **plot** your data.
+To do that, all you need to do is run main.py, input the folder's name where the JSON files are and you'll be presented with the oh so faithful press 1-5 menu.  
 
+## Guide
+**First of all** you'll need to download your data through Facebook. Now, Facebook allow to download only your messages but it's a small process. For more info on how to do that visit the link below
+* []() https://www.facebook.com/help/1701730696756992?helpref=hc_global_nav  
+**OR**  
+* []() *facebook.com -> Settings & Privacy -> Settings -> Your Facebook Information -> Access Your Information -> (top of page) download your information*
+* []() *Deselect* them all and then select only your Messages if that's all you want.
+* []() Make sure you choose download data as **JSON**
+* []() **Data Range**: All of my Data | **Format:** JSON | **Media Quality:** that's up to you  
+**Congratulations, you now have your data**  
+*here goes the stuff about the data folders*    
+You'll see that there is a folder named MessagesSources.  
+That's the folder the script is going to look into to find the folders containing your JSON files for every specific conversation.  
+Move your extracted folders inside that one and name it appropriately so there's no confusion for you.  
 
-
+**Now you can start**
+Open the folder in your preferred editor (I'd suggest VSCode) or simply open terminal / cmd in the repo's folder  
+* []() Run *python main.py*  
+* []() Input your folder's name
+* []() The menu will pop up, you can use the available options through your keyboard 1-5 keys
+* []() Success  
 <!-- ROADMAP -->
 ## Roadmap
 
