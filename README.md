@@ -52,11 +52,12 @@
 * [Roadmap](#roadmap)
 * [Contributing](#contributing)
 * [License](#license)
+* [Example Visualization](#example-visualization)
 
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
-**An analysis tool**  
+**An analysis & plotting tool**  
 **This software does NOT use networking of any kind**  
 ![example.gif](https://media.giphy.com/media/16nTbGPdl2bHO08okk/giphy.gif)
 ### Built With
@@ -100,9 +101,12 @@ pip install -r requirements.txt
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-You can use these scripts for structuring, extracting and visualizing your data taken from Facebook's Messenger.
+You can use these scripts for structuring, extracting and visualizing your data taken from Facebook's Messenger.  
 
-The main use of this tool is to **plot** your data.
+It is **indifferent** as to how many people there are in a conversation, the plots and DS will work regardless.  
+
+The main use of this tool is to **plot** your data.  
+
 To do that, all you need to do is run main.py, input the folder's name where the JSON files are and you'll be presented with the oh so faithful press 1-5 menu.  
 
 ## Guide
@@ -155,10 +159,11 @@ Contributions are what make the open source community such an amazing place to b
 
 Distributed under the MIT License. See `LICENSE` for more information.
 
-
+<!-- EXAMPLE -->
+## Example Visualization
+![visualization.jpg](https://i.imgur.com/LMWYI8R.jpg)
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[issues-url]: https://github.com/github_username/repo/issues
-[license-url]: https://github.com/github_username/repo/blob/master/LICENSE.txt
-[product-screenshot]: images/screenshot.png
+[issues-url]: https://github.com/ShadehaterCS/MessengerAnalyzer/issues
+[license-url]: https://github.com/ShadehaterCS/MessengerAnalyzer/blob/master/LICENSE.txt
