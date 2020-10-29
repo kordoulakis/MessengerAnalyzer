@@ -32,9 +32,6 @@
   <p align="center">
     An analyzer of messages
     <br />
-    <a href="https://github.com/ShadehaterCS/TheMessengerProject"><strong>Explore the docs »</strong></a>
-    <br />
-    <br />
     <a href="https://github.com/ShadehaterCS/TheMessengerProject/issues">Report Bug</a>
     ·
     <a href="https://github.com/ShadehaterCS/TheMessengerProject/issues">Request Feature</a>
@@ -60,14 +57,13 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 **An analysis tool**  
+**This software does NOT use networking of any kind**  
 ![example.gif](https://media.giphy.com/media/16nTbGPdl2bHO08okk/giphy.gif)
 ### Built With
 
 * []()Python 3
 * []()matplotlib
 * []()NumPy
-**Does NOT use networking of any kind**
-
 
 <!-- GETTING STARTED -->
 ## Getting Started
@@ -120,8 +116,11 @@ To do that, all you need to do is run main.py, input the folder's name where the
 * []() Make sure you choose download data as **JSON**
 * []() **Data Range**: All of my Data | **Format:** JSON | **Media Quality:** that's up to you
 **Congratulations, you now have your data**  
-*here goes the stuff about the data folders*    
-You'll see that there is a folder named MessagesSources.  
+* []() Inside your downloaded .zip you'll see the folders you selected. We're interested in the messages one. Apparently the folders are named with fb username + a random uid.
+* []() Inside every folder you'll see one or more JSON files. Copy that folder and be ready to rename it because you can't be typing that whole thing.  
+
+**Now go into the repo's folder**
+* []()You'll see that there is a folder named MessagesSources.  
 That's the folder the script is going to look into to find the folders containing your JSON files for every specific conversation.  
 Move your extracted folders inside that one and name it appropriately so there's no confusion for you.  
 
