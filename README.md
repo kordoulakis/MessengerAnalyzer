@@ -59,10 +59,8 @@
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
-
-[![Product Name Screen Shot][product-screenshot]](https://example.com)
-
 **An analysis tool**  
+![example.gif](https://media.giphy.com/media/16nTbGPdl2bHO08okk/giphy.gif)
 ### Built With
 
 * []()Python 3
@@ -115,10 +113,12 @@ To do that, all you need to do is run main.py, input the folder's name where the
 **First of all** you'll need to download your data through Facebook. Now, Facebook allow to download only your messages but it's a small process. For more info on how to do that visit the link below
 * []() https://www.facebook.com/help/1701730696756992?helpref=hc_global_nav  
 **OR**  
-* []() *facebook.com -> Settings & Privacy -> Settings -> Your Facebook Information -> Access Your Information -> (top of page) download your information*
+* []() *facebook.com -> Settings & Privacy -> Settings -> Your Facebook Information -> Access Your Information -> (top of page) download your information*  
+**OR**
+* []() *https://facebook.com/dyi  
 * []() *Deselect* them all and then select only your Messages if that's all you want.
 * []() Make sure you choose download data as **JSON**
-* []() **Data Range**: All of my Data | **Format:** JSON | **Media Quality:** that's up to you  
+* []() **Data Range**: All of my Data | **Format:** JSON | **Media Quality:** that's up to you
 **Congratulations, you now have your data**  
 *here goes the stuff about the data folders*    
 You'll see that there is a folder named MessagesSources.  
