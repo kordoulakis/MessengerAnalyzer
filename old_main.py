@@ -4,8 +4,10 @@
 """
 import json
 import datetime
-import plotme 
-import textme
+import plotme
+
+#This file is the same as main.py but it's missing the 'CLI', thus you can call the functions directly in a simpler fashion
+#Instructions are at the bottom of the file
 
 """
 #time is stored in epochs ['timestamp_ms'] so we have to make it into a date %Y %m %d
@@ -17,9 +19,14 @@ import textme
 def getDateFromTimestamp(timestamp): 
     return datetime.datetime.fromtimestamp(float(timestamp)/1e3)
 
+#helper function for the other 2 functions that have to do with month data
+def getMonthName(month): #Returns a string with the month's number
+    months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+    return months[month-1]
+
 #@returns a list of the names of the participants
-#@caution terribly inefficient but there's no other way as someone can be a sender of a message
-#but they would not be accounted for the participants dict of the messagesFile
+#@WHY while there is a 'participants' field it does not account for if someone was in the conversation but has since left
+#thus we check every message in the list, we could do this in conjuction with another function but oh well?
 def getParticipants():
     participantsList = []
     for m in messagesList:
@@ -27,23 +34,28 @@ def getParticipants():
             participantsList.append(m['sender_name'])
     return participantsList
 
-def getTotalMessages(): #returns the length of the list, pretty easy ok
+#@returns the length of the messagesList since it's already been sanitized and filtered to only contain messages
+def getTotalMessages(): 
     return len(messagesList)
 
+#@returns the days attribute of @global variable 'diff' which is set at the loadfile() function at the bottom 
 def getSpanOfConversation():
     return str(diff.days+1) + " days"
+
 #@returns a dict { participantName : value }
+#create a dict with keys the participants through the pList and assign 0 to it
+#iterate over the mList and just increment the value for that key by 1
+#@bool includeTotal is used to have a 3rd element total that holds all messages
 def getTotalMessagesPerParticipant(includeTotal):
     theDict = dict.fromkeys(participantsList,0)
     total = 0
     for m in messagesList:
         theDict[m['sender_name']] += 1
-        total+=1
     if(includeTotal == True):
-        theDict.update({'Total' : total})
+        theDict.update({'Total' : len(messagesList)})
     return theDict
 
-#@takes argument this the return of getMessagesPerMonth()
+#@argument 'this' is the return of the getMessagesPerMonth() function
 #@why? because we could order the dict in the perMonth function but then the data wouldn't be useful for plotting
 #@returns a tuple (str, str) with the month's name and message value
 def getMonthWithMostMessages(this):
@@ -54,22 +66,23 @@ def getMonthWithMostMessages(this):
             maxV = v
             maxM = k
     return (maxM, str(maxV)) if maxV > 0 else None
-#helper function for the other 2 functions that have to do with month data
-def getMonthName(month): #Returns a string with the month's number
-    months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-    return months[month-1]
 
-#returbs a dict where keys are the year + monthName and values are ints with the ammount of messages of both participants
+#@returns a dict where keys are 'year + monthName' and values are ints with the ammount of messages of both participants
 #ex { 2020 February : 2469}
 def getMessagesPerMonth():
     perMonthDict = dict()
     for m in messagesList:
         date = getDateFromTimestamp(m['timestamp_ms'])
-        key = str(date.year) +' '+ str(getMonthName(date.month))
-        perMonthDict.update({key : 1 }) if key not in perMonthDict else perMonthDict.update({key : perMonthDict[key] + 1})
+        key = str(date.year) +' '+ str(getMonthName(date.month)) #'2020 February'
+        perMonthDict.update({key : 1 }) if key not in perMonthDict else perMonthDict.update({key : perMonthDict[key] + 1}) #{2020 February : 2469}
     return perMonthDict
+    
 #@returns a dict of dicts for every month that has the participants as keys and their respective messages as values
-#@structure is: { date(y m) : { p1 : v, p2 : v }, date2(y m) : { p1 : v, p2 : v } }
+#@structure is: 
+# { 
+# date(y m) : { p1 : v, p2 : v }, 
+# date2(y m) : { p1 : v, p2 : v } 
+# }
 #@access by : dict[date][participant] returns the messages of that participant for that date
 def getMessagesPerMonthPerParticipant():
     theDict = {k:{} for (k,v) in getMessagesPerMonth().items()}
@@ -84,7 +97,7 @@ def getMessagesPerMonthPerParticipant():
 
 #@returns a dict in form of { date(y m d) : messages }
 #@**kwargs is used if you want to find only the days where some words were written
-#@**kwargs uses 'words'=[str1, str2, str3, etc], needs to be a set
+#@uses 'words'=[str1, str2, str3, etc], should be a @type::set()
 def getMessagesPerDay(**kwargs):
     keywords = set(kwargs['words']) if len(kwargs) > 0 else False
     from datetime import timedelta
@@ -103,8 +116,13 @@ def getMessagesPerDay(**kwargs):
                 theDict[currentDay] += 1 if len(keywords.intersection(wList)) > 0 else 0
     return theDict
     
-#@returns a dict where the keys are the days and the values are dicts {date : dict('participant' : messages ) }
-#final structures should be e.x : {' 2018 01 15' : {'p1' : 30, 'p2' : 39}, '2019 09 12' : {'p1' : 39, 'p2' : 30} }
+#@returns a dict where the keys are the dates and the values are dicts 
+#@representation { date : {'participant' : messages} }
+#final structures should be e.x : 
+# {
+# '2018 01 15' : {'p1' : 30, 'p2' : 39}, 
+# '2019 09 12' : {'p1' : 39, 'p2' : 30} 
+# }
 def getMessagesPerDayPerParticipant():
     from datetime import timedelta
     theDict = dict()
@@ -116,8 +134,16 @@ def getMessagesPerDayPerParticipant():
         theDict[currentDay][m['sender_name']] += 1
     return theDict
 
-#@returns a list of ints that represent the seconds between the last messages of a participant and the first of another
+#@returns a list of ints that represent the seconds between the last message of a participant and the first of another
 #@note does not care for ammount of participants in conversation
+#@**kwargs : 'time' = type::string ex. 'Seconds', is @used for time representation and divisor since we get seconds
+#@alternative, you could use the first message of someone until the first message of another but that creates
+#   situations where it's not really a response but rather a new starting point for the conversation. That would
+#   require contextual analysis.
+#@example if someone says 'goodbye' or 'talk to you then' then it's not really a response to that last message
+#@also someone could be the same one that sent the last message at let's say a week ago and then sends the next message
+#   initiating the conversation again. That would skew the results as the response will be at the last message sent rather
+#   than the one a week ago.
 def getReponseTimePerMessage(**kwargs):
     times = {'Seconds':1, 'Minutes' : 60, 'Hours' : 3600}
     divisor = times[kwargs['time']] if len(kwargs) > 0 else 1
@@ -131,6 +157,7 @@ def getReponseTimePerMessage(**kwargs):
     return myl
 
 #@returns a dict {k:v where k=participant, v=their global response time/their responses}
+#@**kwargs : 'time' = type::string ex. 'Seconds', is @used for time representation and divisor since we get seconds
 def getGlobalAverageResponseTimePerParticipant(**kwargs):
     times = {'Seconds' : 1, 'Minutes' : 60, 'Hours' : 60*60}
     divisor = times[kwargs['time']] if len(kwargs) > 0 else 1
@@ -153,7 +180,8 @@ def getGlobalAverageResponseTimePerParticipant(**kwargs):
         theDict[k] = round(valuesList[participantsList.index(k)] / v,2) // divisor
     return theDict
 
-#@returns a dict as { (year month) : value }
+#@returns a dict where keys are each month as (year month) and values the messages for that month
+#{ date : messages }
 def getAverageResponseTimePerMonth(**kwargs):
     #same idea as the function above only we are now adding everything to a per month dict and do not care about
     #the participants as this is a global average of their messages
@@ -197,7 +225,8 @@ def getMessagesPerTimeOfDay():
     for m in messagesList:
         timeDict[getDateFromTimestamp(m['timestamp_ms']).hour] += 1
     return timeDict
-#returns a double
+
+#returns a float
 #ammount refers to the amount of text messages, not photos, videos etc.
 def getAverageWordsPerMessage():
     wordCount = 0
@@ -208,6 +237,7 @@ def getAverageWordsPerMessage():
             wordCount += len(words)
             ammount += 1
     return round(wordCount / ammount, 2)
+
 #@returns a dict {k:v with k:month name v:totalwordsPMonth / totalmessagesPMonth}
 def getAverageWordsPerMessagePerMonth():
     perMonthDict = dict()#holds the ammount of words for each month
@@ -231,7 +261,10 @@ def getAverageWordsPerMessagePerMonth():
 
     return perMonthDict
 #@returns a dict with key: sender_name | value: number:averageWords
-#TODO rewrite this
+#{ participant : averageWords }
+#@messagesPerParticipant::list holds number of messages for every participant
+#@averages::list holds the sum of words of every message for that participant
+#@pDict::dict is the return, keys are the participants, value is totalWordsOfPar / totalMessagesOfPar
 def getAverageWordsPerMessagePerParticipant():
     messagesPerParticipant = [0] * len(participantsList)
     averages = [0] * len(participantsList)
@@ -246,6 +279,7 @@ def getAverageWordsPerMessagePerParticipant():
         pDict[participantsList[i]] = round(averages[i] / messagesPerParticipant[i], 2)
 
     return pDict
+
 #returns a dict with typeOfMessage : value
 def getMessagesPerType(): #The types are: audio_files | photos | call_duration | videos | share | gifs and if none of these, then it's a simple text message
     #Using 2 lists more than just the typesSet because we want to change the name of the keys in the final dict
@@ -266,8 +300,12 @@ def getMessagesPerType(): #The types are: audio_files | photos | call_duration |
     return typesDict
 
 #@returns a dict of dicts
-#@structure { 'sender1' : {'simple' : 1, 'photos' : 145}, 'sender2' : {}etc. }
-#@explain each dict contains a keys that relate to the type of message and their values
+#@structure { 
+# {
+# 'participant1' : {'simple' : 1, 'photos' : 145}, 
+# 'participant2' : {'simple' : 4, 'photos' : 123} 
+# }
+#each dict contains a key that relates to the type of message and their values
 def getMessagesPerTypePerParticipant():
     typesSet = {"simple", "photos", "videos", "audio_files", "call_duration", "share", "gifs"}
     fixedTypesList = ['Text messages','Photos', 'Videos','Voice recordings',  'Voice calls',  'Shares', 'gifs']
@@ -289,6 +327,7 @@ def getMessagesPerTypePerParticipant():
             add = False
 
     return dictPerParticipant
+
 #returns a sorted dictionary containing every word and the times it was sent
 def getMostCommonWords(**kwargs): 
     from collections import defaultdict
@@ -309,11 +348,12 @@ def getMostCommonWords(**kwargs):
                 return enforcedDict
             enforcedDict.update({k:v})
     return sortedDict
+
 #@returns an int of the length of the set of mostCommonWords since it's already there
 def getAmmountOfUniqueWords():
     return len(getMostCommonWords())
 
-#@returns a sorted dict frin the getMessagesPerDay() function 
+#@returns a sorted dict fron the getMessagesPerDay() function 
 #**kwargs is for using ranger=x where x the ammount of days you'd like to see
 def getDaysWithMostMessages(**kwargs):   
     most = getMessagesPerDay()
@@ -324,14 +364,17 @@ def getDaysWithMostMessages(**kwargs):
             if (len(enforcedDict) == kwargs['range']):
                 return enforcedDict
             enforcedDict.update({k:v})
-    return most
+    else: #not needed, added for visual clarity
+        return most
 
+#@returns a float (response time in seconds, no rounding)
+#Sums all the response times for every message from the list returned by getResponseTimePerMessage()
+#divides it by the length of that list since every message in that list is a response
+#returns it
 def getGlobalAverageResponseTime():
     temp = getReponseTimePerMessage() #returns the list in seconds
-    sum = 0
-    for i in temp:
-        sum+=i
-    return sum/len(temp)
+    return sum(temp)/len(temp)
+
 #strips the other information from the messageFile, returns a list instead of dict
 def dictToList(messagesFile):
     tempList = [message for message in messagesFile['messages']]
@@ -341,13 +384,17 @@ def dictToList(messagesFile):
                 t[key] = t[key].encode('latin1').decode('utf8')
     return tempList
 
+#@returns an int
+#counts the times a word is seen in all the messages
+#iterates over every message, uses.split() and searches for it in that list
+#increments+1 for every time the word is found
 def getWordAppearances(word):
     count = 0
     for m in messagesList:
-        if ('content' in m.keys()):
-            count = count+1 if word in m['content'].split() else count
+        if ('content' in m.keys()): #needed because not every message is a text. otherwise throws KeyError
+            for w in m['content'].split():
+                count = count+1 if word == w else count
     return count
-
 #****************START****************#
 messagesFile = None
 messagesList = [] #Will be a list of dicts containing the content of each message
@@ -357,7 +404,7 @@ messagesList = [] #Will be a list of dicts containing the content of each messag
 from os import listdir
 import time
 stime = time.time()
-name = '' #CHANGE THIS
+name = 'skg' #CHANGE THIS
 dir = r'./MessagesSources/'+name+'/'
 for i in range(1,len(listdir(dir))+1):
     with open (dir+'message_'+str(i)+'.json', 'r',encoding="utf-8") as f:
@@ -372,9 +419,8 @@ sdate = getDateFromTimestamp(messagesList[0]['timestamp_ms'])
 diff = ldate - sdate
 print('---- loading took %s seconds to complete ----' %(time.time() - stime))
 
-
-
-#ATTENTION: There is no networking in this thing, you are safe unless you have malware. Go check that.
+#################################### ATTENTION ####################################
+#There is no networking in this thing, you are safe unless you have malware. Go check that.
 """ How to call Functions and Plots 
 Every function here returns something and is declared above it.
 Functions do not need the messages as arguments because messagesList contains them all in proper format
@@ -430,4 +476,3 @@ Thank you!
 #plotme.plotSpiderGraph(getMessagesPerDayOfTheWeek())
 #plotme.plotLineGraph_TimeOfResponsePerMessage(getReponseTimePerMessage(time='Minutes'),time='Minutes')
 #print(getMostCommonWords())
-print('---- function took %s seconds to complete ----' %(time.time() - stime))
