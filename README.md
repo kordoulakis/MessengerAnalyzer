@@ -91,7 +91,7 @@ see instructions below
 
 1. Clone the repo
 ```sh
-git clone https://github.com/github_username/repo_name.git
+git clone https://github.com/ShadehaterCS/MessengerAnalyzer.git
 ```
 2. Install pip packages
 ```sh
@@ -110,15 +110,16 @@ The main use of this tool is to **plot** your data.
 To do that, all you need to do is run main.py, input the folder's name where the JSON files are and you'll be presented with the oh so faithful press 1-5 menu.  
 
 ## Guide
-**First of all** you'll need to download your data through Facebook. Now, Facebook allow to download only your messages but it's a small process. For more info on how to do that visit the link below
+**First of all** you'll need to download your data through Facebook. Now, Facebook does allow you to only download your messages but it's a process. For more info on how to do that visit the link below
 * []() https://www.facebook.com/help/1701730696756992?helpref=hc_global_nav  
 **OR**  
 * []() *facebook.com -> Settings & Privacy -> Settings -> Your Facebook Information -> Access Your Information -> (top of page) download your information*  
 **OR**
-* []() *https://facebook.com/dyi  
+* []() **https://facebook.com/dyi**  
 * []() *Deselect* them all and then select only your Messages if that's all you want.
 * []() Make sure you choose download data as **JSON**
-* []() **Data Range**: All of my Data | **Format:** JSON | **Media Quality:** that's up to you
+* []() **Data Range**: All of my Data | **Format:** JSON | **Media Quality:** that's up to you  
+
 **Congratulations, you now have your data**  
 * []() Inside your downloaded .zip you'll see the folders you selected. We're interested in the messages one. Apparently the folders are named with fb username + a random uid.
 * []() Inside every folder you'll see one or more JSON files. Copy that folder and be ready to rename it because you can't be typing that whole thing.  
@@ -129,7 +130,7 @@ That's the folder the script is going to look into to find the folders containin
 Move your extracted folders inside that one and name it appropriately so there's no confusion for you.  
 
 **Now you can start**
-Open the folder in your preferred editor (I'd suggest VSCode) or simply open terminal / cmd in the repo's folder  
+Open the folder in your preferred editor and run it through that or simply open *terminal / cmd* in the repo's folder  
 * []() Run *python main.py*  
 * []() Input your folder's name
 * []() The menu will pop up, you can use the available options through your keyboard 1-5 keys
