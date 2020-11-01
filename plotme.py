@@ -349,7 +349,6 @@ def plotBarGraph_MessagesPerMonth(this, **kwargs):
     plt.xticks(rotation=30)
 
     plt.bar(dates, values, color=colors)
-    plt.savefig('total.png',transparent=True,dpi=300)
     plt.show()
 
 #@yeah ok this is something
