@@ -1,0 +1,28 @@
+{
+    "participants": [
+        {
+          "name": "Bro"
+        },
+        {
+          "name": "Bro bro"
+        }
+    ],
+    "messages":[
+        {
+            "sender_name": "Bro",
+            "timestamp_ms": 1598389452333,
+            "content": "heyyy bro",
+            "type": "Generic"  
+        },
+        {
+            "sender_name": "Bro bro",
+            "timestamp_ms": 1598389450314,
+            "content": "Whatchu doin' duuude",
+            "type": "Generic" 
+        }
+    ],
+    "title": "Bro bro",
+    "is_still_participant": true,
+    "thread_type": "Regular",
+    "thread_path": "inbox/Brobro_jfajfjahf27"
+}
