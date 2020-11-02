@@ -162,7 +162,7 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 <!-- EXAMPLE -->
 ## Example Visualization
-![visualization.jpg](https://imgur.com/a/QyC2P4d)
+![visualization.jpg](https://i.imgur.com/EROL1au.jpg)
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
