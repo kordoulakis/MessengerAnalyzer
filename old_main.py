@@ -446,7 +446,7 @@ plotme has *args so it can set the proper title for the function.
 
 Feel free to change anything and submit a pull request if you optimize or fix something.
 
-@toMyDefense, yes many optimizations could be made, such as creating a perMonthList to iterate over instead
+@toMyDefence, yes many optimizations could be made, such as creating a perMonthList to iterate over instead
 of going through all the messagesList and doing that dynamically every time. Why did I not? well
 my bad
 This thing is so fast anyway that it doesn't matter.
