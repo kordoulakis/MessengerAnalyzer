@@ -1,0 +1,9 @@
+{
+    "participants": [{"name": "User 1"}, {"name": "User 2"}],
+    "messages": [
+        {"sender_name": "User 1", "timestamp_ms": 1600000000000, "content": "Hello", "type": "Generic"},
+        {"sender_name": "User 2", "timestamp_ms": 1600000060000, "content": "Hi there!", "type": "Generic"},
+        {"sender_name": "User 1", "timestamp_ms": 1600000120000, "content": "How are you?", "type": "Generic"},
+        {"sender_name": "User 2", "timestamp_ms": 1600000180000, "content": "I am good, thanks for asking! bro", "type": "Generic"}
+    ]
+}

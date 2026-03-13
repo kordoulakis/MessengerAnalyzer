@@ -1,0 +1,20 @@
+[project]
+name = "messenger-analyzer"
+version = "0.1.0"
+description = "A tool to analyze Facebook Messenger conversation data"
+authors = [
+    { name = "Elias Kordoulas" }
+]
+license = { text = "MIT" }
+dependencies = [
+    "pandas",
+    "matplotlib",
+    "numpy",
+    "seaborn",
+    "typer",
+    "rich"
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
