@@ -38,10 +38,13 @@ Each layer only depends on the ones to its left.
 - **Data and presentation are separate.** `build_report()` returns plain data;
   `to_text()` / `to_json()` render it. A web API can return `build_report()`
   as-is.
-- **Interactive charts with Plotly.** Pages are self-contained HTML (plotly.js
-  inlined, so they work offline). The figure JSON is the same format the future
-  React/Vue front end can render with plotly.js. Plotly is optional
-  (`pip install .[charts]`); static export adds kaleido (`.[export]`).
+- **Local-only, enforced.** Nothing makes network requests: pages inline
+  plotly.js, image export runs kaleido with MathJax disabled, and
+  `tests/test_offline.py` fails if any command opens a connection or a page
+  references a remote resource.
+- **Interactive charts with Plotly.** Pages are self-contained HTML. The figure
+  JSON is the same format the future React/Vue front end can render with
+  plotly.js. Static image export is the optional `export` extra (kaleido).
 - **Chart colours are validated, not picked by eye.** The 8-slot categorical
   palette passes colour-vision-deficiency, separation and contrast checks in both
   light and dark mode. Each mode has its own steps, not an inversion. Colours follow the

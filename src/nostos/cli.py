@@ -19,7 +19,7 @@ from nostos.analysis import UNITS
 from nostos.loaders import LoaderError
 from nostos.schema import Conversation
 
-DEFAULT_SOURCES = Path("MessagesSources")
+DEFAULT_SOURCES = Path("chats")
 
 _DURATION = re.compile(r"^\s*(\d+(?:\.\d+)?)\s*([smhd]?)\s*$", re.IGNORECASE)
 _DURATION_UNITS = {"s": 1, "m": 60, "h": 3600, "d": 86400, "": 60}
@@ -126,10 +126,9 @@ class CliError(Exception):
 
 
 def _charts() -> ModuleType:
-    try:
-        from nostos import charts
-    except ImportError as exc:  # pragma: no cover - depends on the environment
-        raise CliError("Charts need plotly: pip install 'nostos[charts]'") from exc
+    # Imported on demand: plotly is slow to import and `report`/`list` don't need it.
+    from nostos import charts
+
     return charts
 
 
@@ -175,9 +174,7 @@ def cmd_plot(args: argparse.Namespace) -> int:
             charts.export_image(conversation, args.chart, options, output, theme=theme)
             print(f"Wrote {output}", file=sys.stderr)
             return 0
-        page = charts.chart_page(
-            conversation, args.chart, options, theme=args.theme, plotly_js=args.plotly_js
-        )
+        page = charts.chart_page(conversation, args.chart, options, theme=args.theme)
     except (charts.ChartUnavailable, charts.ExportError) as exc:
         raise CliError(str(exc)) from exc
     _write_page(page, output, args.open if args.open is not None else args.output is None)
@@ -188,9 +185,7 @@ def cmd_dashboard(args: argparse.Namespace) -> int:
     charts = _charts()
     conversation = _load(args)
     started = time.perf_counter()
-    page = charts.dashboard_page(
-        conversation, _chart_options(args, charts), theme=args.theme, plotly_js=args.plotly_js
-    )
+    page = charts.dashboard_page(conversation, _chart_options(args, charts), theme=args.theme)
     if args.verbose:
         print(f"Built dashboard in {time.perf_counter() - started:.2f}s", file=sys.stderr)
     output: Path = args.output or _default_output(args, "dashboard")
@@ -256,14 +251,6 @@ def build_parser() -> argparse.ArgumentParser:
         choices=["auto", "light", "dark"],
         default="auto",
         help="colour theme; auto follows the viewer's system setting (default: %(default)s)",
-    )
-    html.add_argument(
-        "--cdn",
-        dest="plotly_js",
-        action="store_const",
-        const="cdn",
-        default="inline",
-        help="load plotly.js from its CDN: ~4.7 MB smaller file, but needs internet to view",
     )
     html.add_argument(
         "--open",

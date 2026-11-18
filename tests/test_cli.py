@@ -53,7 +53,7 @@ def test_missing_source_is_a_clean_error(
 @pytest.mark.parametrize("chart", sorted(CHARTS))
 def test_every_chart_writes_html(chart: str, export_dir: Path, tmp_path: Path) -> None:
     out = tmp_path / f"{chart}.html"
-    assert main(["plot", str(export_dir), chart, "-o", str(out), "--tz", "UTC", "--cdn"]) == 0
+    assert main(["plot", str(export_dir), chart, "-o", str(out), "--tz", "UTC"]) == 0
     page = out.read_text(encoding="utf-8")
     assert f'id="chart-{chart}"' in page
     assert '"light":' in page
@@ -68,7 +68,7 @@ def test_every_chart_writes_html(chart: str, export_dir: Path, tmp_path: Path) -
 )
 def test_chart_variants(chart: str, flags: list[str], export_dir: Path, tmp_path: Path) -> None:
     out = tmp_path / "x.html"
-    assert main(["plot", str(export_dir), chart, "-o", str(out), "--cdn", *flags]) == 0
+    assert main(["plot", str(export_dir), chart, "-o", str(out), *flags]) == 0
 
 
 def test_dashboard(export_dir: Path, tmp_path: Path) -> None:
@@ -80,8 +80,7 @@ def test_dashboard(export_dir: Path, tmp_path: Path) -> None:
     assert '<html lang="en" data-theme="dark">' in page
     assert page.count('class="card') == len(CHARTS)
     assert "Typical reply" in page
-    assert "loads nothing from the internet" in page  # plotly.js is inlined by default
-    assert '<script src="https://cdn.plot.ly' not in page
+    assert "loads nothing from the internet" in page
 
 
 def test_unknown_chart(export_dir: Path) -> None:

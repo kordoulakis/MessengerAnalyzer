@@ -1,7 +1,7 @@
 """Interactive charts (Plotly): single-chart pages, a dashboard, and image export.
 
-Requires the ``charts`` extra (``pip install 'nostos[charts]'``);
-image export additionally needs ``kaleido`` and a Chrome/Chromium browser.
+Image export additionally needs the ``export`` extra (kaleido) and a
+Chrome/Chromium browser.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ from nostos.charts.figures import (
     build,
     kept_senders,
 )
-from nostos.charts.html import Kpi, PlotlyJS, Section, ThemeMode, render_page
+from nostos.charts.html import Kpi, Section, ThemeMode, render_page
 from nostos.charts.theme import DARK, LIGHT, THEMES, ThemeName
 from nostos.report import format_duration
 from nostos.schema import Conversation
@@ -53,7 +53,6 @@ def chart_page(
     opts: ChartOptions,
     *,
     theme: ThemeMode = "auto",
-    plotly_js: PlotlyJS = "inline",
 ) -> str:
     section = _section(conv, name, opts)
     section.wide = True
@@ -62,7 +61,6 @@ def chart_page(
         subtitle=f"{', '.join(conv.participants)} · {_date_range(conv)}",
         sections=[section],
         theme=theme,
-        plotly_js=plotly_js,
     )
 
 
@@ -93,7 +91,6 @@ def dashboard_page(
     opts: ChartOptions,
     *,
     theme: ThemeMode = "auto",
-    plotly_js: PlotlyJS = "inline",
 ) -> str:
     """Every chart on one page, with headline numbers on top."""
     group = len(conv.participants) > 1
@@ -117,7 +114,6 @@ def dashboard_page(
         sections=sections,
         kpis=_kpis(conv, opts),
         theme=theme,
-        plotly_js=plotly_js,
     )
 
 
@@ -175,7 +171,7 @@ def export_image(
         path.write_bytes(image)
     except Exception as exc:  # kaleido raises various errors when Chrome is missing
         raise ExportError(
-            "Image export needs kaleido and Chrome: pip install 'nostos[export]', "
+            "Image export needs kaleido and Chrome: pip install -e '.[export]', "
             f"then run plotly_get_chrome. ({exc})"
         ) from exc
 

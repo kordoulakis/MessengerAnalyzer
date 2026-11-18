@@ -25,7 +25,7 @@ git clone https://github.com/kordoulakis/MessengerAnalyzer.git nostos
 cd nostos
 python -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
-pip install -e ".[charts]"
+pip install -e .
 nostos dashboard example           # opens a dashboard of the bundled sample chat
 ```
 
@@ -41,10 +41,10 @@ Then [download your own chats](#get-your-chats) and run `nostos dashboard <name>
 3. Unzip it and find the `inbox` folder (usually `your_facebook_activity/messages/inbox/`,
    or `messages/inbox/` in older exports). It has one folder per conversation, named
    like `alexsmith_123456789`, each containing `message_1.json`, `message_2.json`, ...
-4. Copy the conversations you want into the `MessagesSources/` folder of this project
-   and rename them to something short, e.g. `MessagesSources/alex/`.
+4. Copy the conversations you want into the `chats/` folder of this project
+   and rename them to something short, e.g. `chats/alex/`.
 
-`MessagesSources/` is ignored by git, so your chats are never committed by accident.
+`chats/` is ignored by git, so your chats are never committed by accident.
 `nostos list` shows what it finds there.
 
 > Chats that use end-to-end encryption (the default for new Messenger chats since
@@ -53,7 +53,7 @@ Then [download your own chats](#get-your-chats) and run `nostos dashboard <name>
 ## Usage
 
 ```bash
-nostos list                              # conversations in MessagesSources/
+nostos list                              # conversations in chats/
 nostos dashboard alex                    # all charts and headline numbers on one page
 nostos report alex                       # every statistic as text
 nostos report alex --format json -o alex.json
@@ -63,7 +63,7 @@ nostos plot alex activity --keywords "coffee,beer"
 nostos plot alex rhythm -o rhythm.png    # static image instead of an interactive page
 ```
 
-`alex` is the name of a folder inside `MessagesSources/`. You can also pass any path
+`alex` is the name of a folder inside `chats/`. You can also pass any path
 to a conversation folder, e.g. `nostos dashboard ~/Downloads/inbox/alexsmith_123456789`.
 
 **Where output goes:**
@@ -110,17 +110,16 @@ to reset, and open **Data table** under a chart to see its numbers.
 | `--unit hours` | Unit for reply times in charts: `seconds`, `minutes` (default) or `hours` |
 | `--top 50` | Number of words in `top-words` (default: 20) |
 | `--theme dark` | Force a theme: `auto` (default, follows the system), `light` or `dark` |
-| `--cdn` | Load the charting library from the internet: the page is ~4.7 MB smaller but needs a connection to view |
 | `-v` | Show how long loading and analysis took |
 
 `nostos <command> --help` lists every option.
 
 ## Privacy
 
-- Nostos reads your export from disk and writes results to disk. It makes no network requests.
-- Dashboards and charts embed everything they need, so they open offline. The one
-  exception is `--cdn`, which makes the page download the charting library
-  (not your data) from cdn.plot.ly when opened.
+- Nostos reads your export from disk and writes results to disk. It never connects
+  to the internet, and the test suite fails if anything tries to.
+- Dashboards and charts embed everything they need (which is why a page is about
+  5 MB), so they open offline and load nothing from anywhere.
 - Generated pages and reports contain names, word lists and activity patterns.
   Treat them as private as the chat itself before sharing them.
 
@@ -136,9 +135,6 @@ HTML format: request it again as JSON.
 **Image export fails**: install the export extra (`pip install -e ".[export]"`) and
 run `plotly_get_chrome` once so it can find a browser to render with.
 
-**`nostos` runs a different program**: an unrelated PyPI package (a git tool) is also
-called `nostos`. Use a separate virtual environment, or run `python -m nostos`.
-
 **Garbled characters like `Ã©` or `Î“`**: Facebook's export mangles every non-English
 character, and Nostos repairs this automatically for every language and for emoji.
 If you still see garbled text, please open an issue.
@@ -151,7 +147,7 @@ from pathlib import Path
 from nostos import analysis as an
 from nostos import loaders
 
-conv = loaders.load(Path("MessagesSources/alex")).in_timezone("Europe/Athens")
+conv = loaders.load(Path("chats/alex")).in_timezone("Europe/Athens")
 print(an.messages_per_sender(conv.messages))
 print(an.messages_per_period(conv.messages, "month", by_sender=True))
 print(an.top_words(conv.messages, 20))

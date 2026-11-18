@@ -1,6 +1,6 @@
 # Your chat exports are private: only the bundled example is tracked.
-MessagesSources/*
-!MessagesSources/example/
+chats/*
+!chats/example/
 
 # Generated output
 *-stats.txt

@@ -15,20 +15,15 @@ dependencies = [
     "polars>=1.30",
     "orjson>=3.10",
     "tzlocal>=5.0",
-]
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "Environment :: Console",
-    "Topic :: Communications :: Chat",
+    "plotly>=6.1",
 ]
 
 [project.optional-dependencies]
-charts = ["plotly>=6.1"]
-export = ["plotly>=6.1", "kaleido>=1.0"]
+# Saving charts as PNG/SVG/PDF; also needs Chrome or Chromium.
+export = ["kaleido>=1.0"]
 
 [dependency-groups]
 dev = [
-    "plotly>=6.1",
     "kaleido>=1.0",
     "pytest>=8",
     "pytest-cov>=5",

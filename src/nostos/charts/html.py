@@ -2,8 +2,8 @@
 
 Every chart is embedded twice, once per theme. The page shows the one matching
 the viewer's system setting (or the toggle in the corner) and swaps live, so a
-chart is never an automatic colour inversion of the other mode. By default
-plotly.js is inlined, so the page works offline and loads nothing from the web.
+chart is never an automatic colour inversion of the other mode. plotly.js is
+inlined, so the page works offline and never loads anything from the internet.
 """
 
 from __future__ import annotations
@@ -13,6 +13,7 @@ import json
 import math
 from dataclasses import dataclass
 from datetime import date, datetime
+from functools import cache
 from typing import Literal
 
 import plotly.io as pio
@@ -21,7 +22,6 @@ import polars as pl
 from nostos.charts.figures import Chart
 
 ThemeMode = Literal["auto", "light", "dark"]
-PlotlyJS = Literal["inline", "cdn"]
 
 
 @dataclass
@@ -65,12 +65,11 @@ def _figure_json(chart: Chart) -> str:
     return str(pio.to_json(chart.figure, validate=False, pretty=False))
 
 
-def _plotly_script(mode: PlotlyJS) -> str:
-    from plotly.offline import get_plotlyjs, get_plotlyjs_version
+@cache
+def _plotly_script() -> str:
+    """plotly.js, inlined so the page works offline and never contacts a server."""
+    from plotly.offline import get_plotlyjs
 
-    if mode == "cdn":
-        src = f"https://cdn.plot.ly/plotly-{get_plotlyjs_version()}.min.js"
-        return f'<script src="{src}" charset="utf-8"></script>'
     return f'<script type="text/javascript">{get_plotlyjs()}</script>'
 
 
@@ -183,7 +182,6 @@ def render_page(
     sections: list[Section],
     kpis: list[Kpi] | None = None,
     theme: ThemeMode = "auto",
-    plotly_js: PlotlyJS = "inline",
 ) -> str:
     figures = ",".join(
         f'{json.dumps(s.id)}:{{"light":{_figure_json(s.light)},"dark":{_figure_json(s.dark)}}}'
@@ -214,12 +212,6 @@ def render_page(
         for s in sections
     )
 
-    footer = (
-        "Generated locally by Nostos. This page loads plotly.js from cdn.plot.ly; "
-        "your data stays in the file."
-        if plotly_js == "cdn"
-        else "Generated locally by Nostos. This page loads nothing from the internet."
-    )
     return f"""<!doctype html>
 <html lang="en" data-theme="{theme}">
 <head>
@@ -227,7 +219,7 @@ def render_page(
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{html.escape(title)}</title>
 <style>{_CSS}</style>
-{_plotly_script(plotly_js)}
+{_plotly_script()}
 </head>
 <body>
 <main>
@@ -237,7 +229,7 @@ def render_page(
 </header>
 {kpi_html}
 <div class="grid">{cards}</div>
-<footer>{footer}</footer>
+<footer>Generated locally by Nostos. This page works offline and loads nothing from the internet.</footer>
 </main>
 <script>{figures_js}</script>
 <script>{_JS}</script>

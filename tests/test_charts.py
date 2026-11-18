@@ -104,9 +104,7 @@ def test_page_escapes_chat_content(tmp_path: Path) -> None:
         ],
         title=evil,
     )
-    page = chart_page(
-        MessengerLoader().load(folder), "participants", ChartOptions(), plotly_js="cdn"
-    )
+    page = chart_page(MessengerLoader().load(folder), "participants", ChartOptions())
     assert "<script>alert(1)" not in page
 
 
