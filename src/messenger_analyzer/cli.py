@@ -1,4 +1,4 @@
-"""Command-line interface: ``msganalyzer {list,report,plot,charts}``."""
+"""Command-line interface: ``msganalyzer {list,report,charts,plot,dashboard}``."""
 
 from __future__ import annotations
 
@@ -6,10 +6,12 @@ import argparse
 import re
 import sys
 import time
+import webbrowser
 from collections.abc import Sequence
 from datetime import timedelta
 from pathlib import Path
 from types import ModuleType
+from typing import Any
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from messenger_analyzer import __version__, loaders
@@ -119,46 +121,80 @@ def cmd_report(args: argparse.Namespace) -> int:
     return 0
 
 
-def _plotting() -> ModuleType:
+class CliError(Exception):
+    """A problem the user can fix; printed without a traceback."""
+
+
+def _charts() -> ModuleType:
     try:
-        from messenger_analyzer import plotting
+        from messenger_analyzer import charts
     except ImportError as exc:  # pragma: no cover - depends on the environment
-        raise LoaderError(
-            "Plotting needs matplotlib: pip install 'messenger-analyzer[plot]'"
-        ) from exc
-    return plotting
+        raise CliError("Charts need plotly: pip install 'messenger-analyzer[charts]'") from exc
+    return charts
+
+
+def _chart_options(args: argparse.Namespace, charts: ModuleType) -> Any:
+    return charts.ChartOptions(
+        by_sender=getattr(args, "by_participant", False),
+        keywords=args.keywords or (),
+        case_sensitive=getattr(args, "case_sensitive", False),
+        unit=args.unit,
+        max_gap=args.max_gap,
+        window=args.window,
+        top=args.top,
+    )
+
+
+def _write_page(page: str, output: Path, open_browser: bool) -> None:
+    output.write_text(page, encoding="utf-8")
+    print(f"Wrote {output}", file=sys.stderr)
+    if open_browser:
+        webbrowser.open(output.resolve().as_uri())
+
+
+def _default_output(args: argparse.Namespace, suffix: str) -> Path:
+    return Path(f"{Path(args.source).name}-{suffix}.html")
 
 
 def cmd_charts(args: argparse.Namespace) -> int:
-    for name, (description, _) in _plotting().CHARTS.items():
-        print(f"{name:<18} {description}")
+    for name, spec in _charts().CHARTS.items():
+        print(f"{name:<16} {spec.description}")
     return 0
 
 
 def cmd_plot(args: argparse.Namespace) -> int:
-    plotting = _plotting()
-    if args.chart not in plotting.CHARTS:
-        raise LoaderError(f"Unknown chart {args.chart!r}. Run 'msganalyzer charts' for the list.")
+    charts = _charts()
+    if args.chart not in charts.CHARTS:
+        raise CliError(f"Unknown chart {args.chart!r}. Run 'msganalyzer charts' for the list.")
     conversation = _load(args)
-    options = plotting.ChartOptions(
-        by_sender=args.by_participant or args.separate,
-        separate=args.separate,
-        keywords=args.keywords or (),
-        case_sensitive=args.case_sensitive,
-        unit=args.unit,
-        max_gap=args.max_gap,
+    options = _chart_options(args, charts)
+    output: Path = args.output or _default_output(args, args.chart)
+    try:
+        if output.suffix.lower() in charts.IMAGE_SUFFIXES:
+            theme = "light" if args.theme == "auto" else args.theme
+            charts.export_image(conversation, args.chart, options, output, theme=theme)
+            print(f"Wrote {output}", file=sys.stderr)
+            return 0
+        page = charts.chart_page(
+            conversation, args.chart, options, theme=args.theme, plotly_js=args.plotly_js
+        )
+    except (charts.ChartUnavailable, charts.ExportError) as exc:
+        raise CliError(str(exc)) from exc
+    _write_page(page, output, args.open if args.open is not None else args.output is None)
+    return 0
+
+
+def cmd_dashboard(args: argparse.Namespace) -> int:
+    charts = _charts()
+    conversation = _load(args)
+    started = time.perf_counter()
+    page = charts.dashboard_page(
+        conversation, _chart_options(args, charts), theme=args.theme, plotly_js=args.plotly_js
     )
-    if args.output:
-        from matplotlib.figure import Figure
-
-        fig = plotting.render(conversation, args.chart, options, Figure(figsize=plotting.FIGSIZE))
-        fig.savefig(args.output, dpi=args.dpi)
-        print(f"Wrote {args.output}", file=sys.stderr)
-    else:
-        import matplotlib.pyplot as plt
-
-        plotting.render(conversation, args.chart, options, plt.figure(figsize=plotting.FIGSIZE))
-        plt.show()
+    if args.verbose:
+        print(f"Built dashboard in {time.perf_counter() - started:.2f}s", file=sys.stderr)
+    output: Path = args.output or _default_output(args, "dashboard")
+    _write_page(page, output, args.open if args.open is not None else args.output is None)
     return 0
 
 
@@ -213,17 +249,55 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("charts", help="list available charts")
     p.set_defaults(func=cmd_charts)
 
-    p = sub.add_parser("plot", parents=[common], help="draw a chart")
+    html = argparse.ArgumentParser(add_help=False)
+    html.add_argument(
+        "--theme",
+        choices=["auto", "light", "dark"],
+        default="auto",
+        help="colour theme; auto follows the viewer's system setting (default: %(default)s)",
+    )
+    html.add_argument(
+        "--cdn",
+        dest="plotly_js",
+        action="store_const",
+        const="cdn",
+        default="inline",
+        help="load plotly.js from its CDN: ~4.7 MB smaller file, but needs internet to view",
+    )
+    html.add_argument(
+        "--open",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help="open the page in a browser (default: only when -o is not given)",
+    )
+    html.add_argument("--unit", choices=list(UNITS), default="minutes", help="unit for reply times")
+    html.add_argument(
+        "--window", type=int, default=30, help="days in the rolling average (default: %(default)s)"
+    )
+    html.add_argument(
+        "--top", type=int, default=20, help="words in the top-words chart (default: %(default)s)"
+    )
+
+    p = sub.add_parser("plot", parents=[common, html], help="draw one interactive chart")
     p.add_argument("chart", help="chart name; see 'msganalyzer charts'")
     p.add_argument(
-        "-o", "--output", type=Path, help="save to an image (png, svg, pdf) instead of showing"
+        "-o",
+        "--output",
+        type=Path,
+        help="output file: .html (interactive) or .png/.svg/.pdf (needs the export extra); "
+        "default: SOURCE-CHART.html",
     )
-    p.add_argument("--dpi", type=int, default=150)
     p.add_argument("--by-participant", action="store_true", help="one series per participant")
-    p.add_argument("--separate", action="store_true", help="one panel per participant (daily)")
     p.add_argument("--case-sensitive", action="store_true", help="match --keywords exactly")
-    p.add_argument("--unit", choices=list(UNITS), default="minutes", help="unit for response times")
     p.set_defaults(func=cmd_plot)
+
+    p = sub.add_parser(
+        "dashboard", parents=[common, html], help="every chart and headline number on one page"
+    )
+    p.add_argument(
+        "-o", "--output", type=Path, help="output .html (default: SOURCE-dashboard.html)"
+    )
+    p.set_defaults(func=cmd_dashboard)
 
     return parser
 
@@ -232,7 +306,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         return int(args.func(args))
-    except LoaderError as exc:
+    except (LoaderError, CliError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     except KeyboardInterrupt:

@@ -20,3 +20,6 @@ dist/
 .ruff_cache/
 .coverage
 htmlcov/
+
+# Charts written to the working directory
+/*.html

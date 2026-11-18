@@ -13,6 +13,7 @@ from messenger_analyzer.analysis.activity import (
     messages_per_period,
     messages_per_sender,
     messages_per_weekday,
+    messages_per_weekday_hour,
     top_periods,
 )
 from messenger_analyzer.analysis.content import (
@@ -26,14 +27,18 @@ from messenger_analyzer.analysis.content import (
     word_occurrences,
 )
 from messenger_analyzer.analysis.responses import (
+    BUCKETS,
     UNITS,
     mean_response_time,
-    mean_response_time_per_month,
-    mean_response_time_per_sender,
+    response_time_distribution,
+    response_time_per_month,
+    response_time_per_sender,
+    response_time_summary,
     response_times,
 )
 
 __all__ = [
+    "BUCKETS",
     "UNITS",
     "WEEKDAYS",
     "average_words",
@@ -42,12 +47,15 @@ __all__ = [
     "filter_keywords",
     "kind_counts",
     "mean_response_time",
-    "mean_response_time_per_month",
-    "mean_response_time_per_sender",
     "messages_per_hour",
     "messages_per_period",
     "messages_per_sender",
     "messages_per_weekday",
+    "messages_per_weekday_hour",
+    "response_time_distribution",
+    "response_time_per_month",
+    "response_time_per_sender",
+    "response_time_summary",
     "response_times",
     "top_periods",
     "top_words",

@@ -6,8 +6,10 @@ from pathlib import Path
 
 import pytest
 
+from messenger_analyzer.charts import CHARTS
 from messenger_analyzer.cli import main, parse_duration
-from messenger_analyzer.plotting import CHARTS
+
+from .conftest import ms, write_export
 
 
 def test_parse_duration() -> None:
@@ -49,20 +51,57 @@ def test_missing_source_is_a_clean_error(
 
 
 @pytest.mark.parametrize("chart", sorted(CHARTS))
-def test_every_chart_renders(chart: str, export_dir: Path, tmp_path: Path) -> None:
-    pytest.importorskip("matplotlib")
-    out = tmp_path / f"{chart}.png"
-    assert main(["plot", str(export_dir), chart, "-o", str(out), "--tz", "UTC", "--dpi", "40"]) == 0
-    assert out.stat().st_size > 0
+def test_every_chart_writes_html(chart: str, export_dir: Path, tmp_path: Path) -> None:
+    out = tmp_path / f"{chart}.html"
+    assert main(["plot", str(export_dir), chart, "-o", str(out), "--tz", "UTC", "--cdn"]) == 0
+    page = out.read_text(encoding="utf-8")
+    assert f'id="chart-{chart}"' in page
+    assert '"light":' in page
+    assert '"dark":' in page
 
 
-@pytest.mark.parametrize("flags", [["--by-participant"], ["--separate"], ["--keywords", "hello"]])
-def test_chart_variants(flags: list[str], export_dir: Path, tmp_path: Path) -> None:
-    pytest.importorskip("matplotlib")
-    out = tmp_path / "x.png"
-    assert main(["plot", str(export_dir), "daily", "-o", str(out), "--dpi", "40", *flags]) == 0
-    assert main(["plot", str(export_dir), "monthly", "-o", str(out), "--dpi", "40", *flags]) == 0
+@pytest.mark.parametrize(
+    "flags", [["--by-participant"], ["--keywords", "hello"], ["--window", "3"]]
+)
+@pytest.mark.parametrize(
+    "chart", ["activity", "monthly", "response-times", "response-trend", "words"]
+)
+def test_chart_variants(chart: str, flags: list[str], export_dir: Path, tmp_path: Path) -> None:
+    out = tmp_path / "x.html"
+    assert main(["plot", str(export_dir), chart, "-o", str(out), "--cdn", *flags]) == 0
+
+
+def test_dashboard(export_dir: Path, tmp_path: Path) -> None:
+    out = tmp_path / "d.html"
+    assert (
+        main(["dashboard", str(export_dir), "-o", str(out), "--tz", "UTC", "--theme", "dark"]) == 0
+    )
+    page = out.read_text(encoding="utf-8")
+    assert '<html lang="en" data-theme="dark">' in page
+    assert page.count('class="card') == len(CHARTS)
+    assert "Typical reply" in page
+    assert "loads nothing from the internet" in page  # plotly.js is inlined by default
+    assert '<script src="https://cdn.plot.ly' not in page
 
 
 def test_unknown_chart(export_dir: Path) -> None:
     assert main(["plot", str(export_dir), "pie"]) == 2
+
+
+def test_unavailable_chart_is_a_clean_error(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    folder = write_export(
+        tmp_path / "solo", [[{"sender_name": "A", "timestamp_ms": ms(2021, 1, 1), "content": "hi"}]]
+    )
+    assert main(["plot", str(folder), "share", "-o", str(tmp_path / "s.html")]) == 2
+    assert "two participants" in capsys.readouterr().err
+
+
+def test_png_export(export_dir: Path, tmp_path: Path) -> None:
+    pytest.importorskip("kaleido")
+    out = tmp_path / "monthly.png"
+    code = main(["plot", str(export_dir), "monthly", "-o", str(out), "--by-participant"])
+    if code != 0:
+        pytest.skip("kaleido could not find a Chrome browser")
+    assert out.read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"

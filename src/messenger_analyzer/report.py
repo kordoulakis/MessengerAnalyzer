@@ -54,8 +54,13 @@ def build_report(
         "busiest_month": _records(busiest_month)[0] if len(busiest_month) else None,
         "response_time": {
             "max_gap_seconds": max_gap.total_seconds() if max_gap else None,
-            "mean_seconds": an.mean_response_time(m, max_gap=max_gap),
-            "per_sender": _records(an.mean_response_time_per_sender(m, max_gap=max_gap)),
+            **an.response_time_summary(m, max_gap=max_gap),
+            "per_sender": _records(an.response_time_per_sender(m, max_gap=max_gap)),
+            "distribution": _records(
+                an.response_time_distribution(m, max_gap=max_gap).with_columns(
+                    pl.col("bucket").cast(pl.String)
+                )
+            ),
         },
         "messages_per_weekday": _records(an.messages_per_weekday(m)),
         "words": {
@@ -131,13 +136,20 @@ def _responses(report: dict[str, Any]) -> list[str]:
     rt = report["response_time"]
     gap = rt["max_gap_seconds"]
     ignored = f" (gaps over {format_duration(gap)} ignored)" if gap else ""
-    return _section(
-        f"Average response time{ignored}: {format_duration(rt['mean_seconds'])}",
+    lines = _section(
+        f"Response time{ignored}: median {format_duration(rt['median_seconds'])}, "
+        f"mean {format_duration(rt['mean_seconds'])}",
         [
-            f"{r['sender']}: {format_duration(r['mean_seconds'])} over {r['responses']:,} responses"
+            f"{r['sender']}: median {format_duration(r['median_seconds'])}, "
+            f"mean {format_duration(r['mean_seconds'])}, {r['responses']:,} responses"
             for r in rt["per_sender"]
         ],
     )
+    lines += _section(
+        "Response time distribution:",
+        [f"{r['bucket']}: {r['share']:.1%}" for r in rt["distribution"]],
+    )
+    return lines
 
 
 def _content(report: dict[str, Any]) -> list[str]:

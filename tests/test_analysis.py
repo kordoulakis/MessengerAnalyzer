@@ -71,7 +71,7 @@ def test_response_times(m: pl.DataFrame) -> None:
     assert rt.height == 4
     assert rt["seconds"][0] == 60
     assert rt["seconds"][2] == 300
-    per_sender = dict(an.mean_response_time_per_sender(m).select("sender", "responses").rows())
+    per_sender = dict(an.response_time_per_sender(m).select("sender", "responses").rows())
     assert per_sender == {"Ana": 1, "Βασίλης": 2, "Cam": 1}
 
 
@@ -84,7 +84,7 @@ def test_max_gap_drops_conversation_restarts(m: pl.DataFrame) -> None:
 def test_no_division_by_zero_with_single_sender(m: pl.DataFrame) -> None:
     solo = m.filter(pl.col("sender") == "Cam")
     assert an.mean_response_time(solo) is None
-    assert an.mean_response_time_per_sender(solo)["mean_seconds"].to_list() == [None]
+    assert an.response_time_per_sender(solo)["mean_seconds"].to_list() == [None]
     assert an.average_words(solo) is None
     assert an.average_words_per_sender(solo)["mean_words"].to_list() == [None]
 
@@ -125,3 +125,55 @@ def test_empty_frame_is_handled(m: pl.DataFrame) -> None:
     assert an.messages_per_period(empty, "day").height == 0
     assert an.top_words(empty).height == 0
     assert an.mean_response_time(empty) is None
+
+
+def test_median_response_time(m: pl.DataFrame) -> None:
+    summary = an.response_time_summary(m, max_gap=timedelta(hours=1))
+    assert summary == {"responses": 2, "mean_seconds": 180.0, "median_seconds": 180.0}
+    per_sender = an.response_time_per_sender(m).filter(pl.col("sender") == "Βασίλης")
+    assert per_sender["median_seconds"].item() == 180.0  # 60s and 300s
+
+
+def test_response_time_distribution(m: pl.DataFrame) -> None:
+    overall = an.response_time_distribution(m)
+    assert overall["bucket"].cast(str).to_list() == [label for _, label in an.BUCKETS]
+    counts = dict(
+        overall.with_columns(pl.col("bucket").cast(str)).select("bucket", "responses").rows()
+    )
+    # 60s (≤ 1 min, inclusive), 300s (1–5 min), 23h54m (6–24 h), ~2 days (> 1 day)
+    assert counts == {
+        "≤ 1 min": 1,
+        "1–5 min": 1,
+        "5–15 min": 0,
+        "15–60 min": 0,
+        "1–6 h": 0,
+        "6–24 h": 1,
+        "> 1 day": 1,
+    }
+    assert overall["share"].sum() == pytest.approx(1.0)
+    per_sender = an.response_time_distribution(m, by_sender=True)
+    shares = per_sender.group_by("sender").agg(pl.col("share").sum())
+    assert shares["share"].to_list() == pytest.approx([1.0, 1.0, 1.0])
+
+
+def test_response_time_per_month_by_sender(m: pl.DataFrame) -> None:
+    result = an.response_time_per_month(m, by_sender=True)
+    assert result.height == 6
+    jan_ana = result.filter((pl.col("period") == date(2020, 1, 1)) & (pl.col("sender") == "Ana"))
+    assert jan_ana["responses"].item() == 1
+
+
+def test_weekday_hour_grid(m: pl.DataFrame) -> None:
+    grid = an.messages_per_weekday_hour(m)
+    assert grid.height == 7 * 24
+    assert grid["messages"].sum() == 8
+    cell = grid.filter((pl.col("weekday") == "Wednesday") & (pl.col("hour") == 10))
+    assert cell["messages"].item() == 3
+
+
+def test_average_words_per_month_by_sender(m: pl.DataFrame) -> None:
+    result = an.average_words_per_month(m, by_sender=True)
+    jan = dict(
+        result.filter(pl.col("period") == date(2020, 1, 1)).select("sender", "mean_words").rows()
+    )
+    assert jan == {"Ana": 3.0, "Βασίλης": 1.5, "Cam": None}

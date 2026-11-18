@@ -101,6 +101,22 @@ def messages_per_hour(messages: pl.DataFrame) -> pl.DataFrame:
     )
 
 
+def messages_per_weekday_hour(messages: pl.DataFrame) -> pl.DataFrame:
+    """Columns: weekday (name), hour (0-23), messages. All 7 x 24 cells, Monday 00:00 first."""
+    ts = pl.col("timestamp")
+    counts = messages.group_by(
+        ts.dt.weekday().cast(pl.Int8).alias("n"), ts.dt.hour().cast(pl.Int8).alias("hour")
+    ).len("messages")
+    full = pl.DataFrame(
+        {"n": pl.int_range(1, 8, dtype=pl.Int8, eager=True), "weekday": WEEKDAYS}
+    ).join(pl.DataFrame({"hour": pl.int_range(0, 24, dtype=pl.Int8, eager=True)}), how="cross")
+    return (
+        full.join(counts, on=["n", "hour"], how="left")
+        .sort("n", "hour")
+        .select("weekday", "hour", pl.col("messages").fill_null(0).cast(pl.Int64))
+    )
+
+
 def top_periods(messages: pl.DataFrame, period: Period = "day", n: int = 5) -> pl.DataFrame:
     """The ``n`` busiest days or months. Ties go to the earlier date."""
     return (

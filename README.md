@@ -11,7 +11,8 @@ command line. Everything runs locally; nothing is sent over the network.
 - Response times (overall, per person, per month)
 - Words per message, most common words, keyword search
 - Message types: text, photos, videos, voice notes, calls, stickers, ...
-- Text or JSON reports, and charts saved as PNG/SVG/PDF or shown in a window
+- An interactive HTML dashboard (light and dark mode, hover for details, data tables),
+  single interactive charts, PNG/SVG/PDF export, and text or JSON reports
 
 Handles conversations with hundreds of thousands of messages in about a second.
 Any number of participants works.
@@ -24,10 +25,12 @@ Requires Python 3.10+.
 git clone https://github.com/kordoulakis/MessengerAnalyzer.git
 cd MessengerAnalyzer
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -e ".[plot]"
+pip install -e ".[charts]"
 ```
 
-Leave out `[plot]` if you only need text/JSON reports.
+Leave out `[charts]` if you only need text/JSON reports. Use `".[export]"` instead
+to also save charts as PNG/SVG/PDF (needs Chrome or Chromium; if it can't find one,
+run `plotly_get_chrome`).
 
 ## Get your data
 
@@ -40,14 +43,17 @@ Leave out `[plot]` if you only need text/JSON reports.
 
 ## Usage
 
+![Dashboard](images/dashboard.png)
+
 ```bash
 msganalyzer list                          # conversations found in MessagesSources/
+msganalyzer dashboard alex                # every chart on one page, opens in your browser
 msganalyzer report alex                   # every statistic, as text
 msganalyzer report alex --format json -o alex.json
 msganalyzer charts                        # list available charts
 msganalyzer plot alex monthly --by-participant
-msganalyzer plot alex daily --keywords "coffee,beer" -o drinks.png
-msganalyzer plot alex responses-monthly --unit hours --max-gap 12h
+msganalyzer plot alex activity --keywords "coffee,beer" -o drinks.png
+msganalyzer plot alex response-trend --by-participant --max-gap 12h
 ```
 
 `alex` can be a folder name inside `MessagesSources/` or any path to a
@@ -59,9 +65,11 @@ Useful options (see `msganalyzer <command> --help` for all):
 |---|---|
 | `--tz Europe/Athens` | Timezone for dates and hours (default: your computer's) |
 | `--max-gap 6h` | Ignore "responses" that come after a long silence; they are usually new conversations |
-| `--keywords a,b` | Count these words (`report`) or only chart messages containing them (`plot daily`) |
-| `--by-participant` / `--separate` | One series, or one panel, per participant |
-| `-o FILE` | Save instead of printing / opening a window |
+| `--keywords a,b` | Count these words (`report`) or only chart messages containing them (`plot activity`) |
+| `--by-participant` | One series per participant (up to 8; quieter people fold into "Other") |
+| `--theme auto\|light\|dark` | Chart colours; `auto` follows the viewer's system and has a toggle |
+| `--cdn` | Load plotly.js from the web instead of embedding it (~4.7 MB smaller page) |
+| `-o FILE` | Output file; for `plot`, `.html` is interactive and `.png/.svg/.pdf` is a static image |
 | `-v` | Print load and analysis timings |
 
 ### As a library

@@ -66,13 +66,19 @@ def average_words_per_sender(messages: pl.DataFrame) -> pl.DataFrame:
     )
 
 
-def average_words_per_month(messages: pl.DataFrame) -> pl.DataFrame:
-    """Columns: period (first of month), text_messages, mean_words."""
+def average_words_per_month(messages: pl.DataFrame, *, by_sender: bool = False) -> pl.DataFrame:
+    """Columns: period (first of month), [sender], text_messages, mean_words.
+
+    Every month is listed; months without text messages have a null mean.
+    """
+    keys = ["period", "sender"] if by_sender else ["period"]
+    full = period_range(messages, "month")
+    if by_sender:
+        full = full.join(senders(messages), how="cross")
     return (
-        period_range(messages, "month")
-        .join(_text_stats(messages, period_expr("month")), on="period", how="left")
+        full.join(_text_stats(messages, period_expr("month"), *keys[1:]), on=keys, how="left")
         .with_columns(pl.col("text_messages").fill_null(0))
-        .sort("period")
+        .sort(keys, maintain_order=True)
     )
 
 

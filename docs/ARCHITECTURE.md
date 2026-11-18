@@ -3,7 +3,7 @@
 ```
             ┌───────────────┐   Conversation    ┌────────────┐  tables / scalars  ┌──────────────┐
  export ──▶ │   loaders/    │ ────────────────▶ │  analysis/ │ ─────────────────▶ │ report.py    │──▶ text / JSON
- folder     │ messenger.py  │  (schema.py)      │ pure funcs │                    │ plotting.py  │──▶ png / window
+ folder     │ messenger.py  │  (schema.py)      │ pure funcs │                    │ charts/      │──▶ html / png
             └───────────────┘                   └────────────┘                    └──────────────┘
                                                                                          ▲
                                                        cli.py: parses flags, wires the layers together
@@ -17,7 +17,9 @@ Each layer only depends on the ones to its left.
 | `loaders/` | Turn one platform's export into a `Conversation`. Registry in `loaders/__init__.py` | compute statistics |
 | `analysis/` | Pure, vectorized functions: `DataFrame -> DataFrame \| scalar` | print, plot, read files |
 | `report.py` | Run every analysis once, return JSON-serialisable data; render it as text or JSON | do I/O |
-| `plotting.py` | One function per chart, drawing onto a supplied matplotlib `Figure` | use global pyplot state |
+| `charts/theme.py` | Colour and type tokens for light and dark | know about charts |
+| `charts/figures.py` | One function per chart: conversation -> Plotly figure + data table | write files |
+| `charts/html.py` | Self-contained HTML page (one chart or the dashboard) with live theme switching | compute statistics |
 | `cli.py` | Argument parsing, file paths, timing output, exit codes | contain analysis logic |
 
 ## Design decisions
@@ -36,8 +38,16 @@ Each layer only depends on the ones to its left.
 - **Data and presentation are separate.** `build_report()` returns plain data;
   `to_text()` / `to_json()` render it. A web API can return `build_report()`
   as-is.
-- **matplotlib is optional** (`pip install .[plot]`), so the core library and
-  `report` command stay light.
+- **Interactive charts with Plotly.** Pages are self-contained HTML (plotly.js
+  inlined, so they work offline). The figure JSON is the same format the future
+  React/Vue front end can render with plotly.js. Plotly is optional
+  (`pip install .[charts]`); static export adds kaleido (`.[export]`).
+- **Chart colours are validated, not picked by eye.** The 8-slot categorical
+  palette passes colour-vision-deficiency, separation and contrast checks in both
+  light and dark mode. Each mode has its own steps, not an inversion. Colours follow the
+  person (slot = order of first message), never their rank, and a 9th+
+  participant folds into "Other" instead of getting a generated colour.
+- **Every chart has a data table**, so no value is only readable by hover or colour.
 
 ## Adding a platform
 
