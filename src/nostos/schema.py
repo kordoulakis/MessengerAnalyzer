@@ -1,6 +1,6 @@
 """Canonical, platform-independent representation of a conversation.
 
-Every loader (Messenger today; Instagram and WhatsApp later) converts its native
+Every loader (Messenger, Instagram, WhatsApp) converts its native
 export format into a :class:`Conversation` whose ``messages`` frame follows
 :data:`MESSAGE_SCHEMA`. Everything downstream (analysis, reporting, plotting)
 only ever sees this schema, so adding a platform never touches analysis code.

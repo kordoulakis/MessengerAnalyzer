@@ -17,6 +17,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from nostos import __version__, loaders
 from nostos.analysis import UNITS
 from nostos.loaders import LoaderError
+from nostos.loaders.base import local_timezone
 from nostos.schema import Conversation
 
 DEFAULT_SOURCES = Path("chats")
@@ -49,26 +50,16 @@ def parse_timezone(text: str) -> str:
     return text
 
 
-def local_timezone() -> str:
-    try:
-        from tzlocal import get_localzone_name
-
-        name = get_localzone_name()
-    except Exception:  # tzlocal can fail on unusual systems; UTC is a safe default
-        return "UTC"
-    return name or "UTC"
-
-
 def resolve_source(source: str, sources_dir: Path) -> Path:
-    """A path to an export folder, or the name of a folder inside ``sources_dir``."""
+    """A path to an export (folder or chat file), or its name inside ``sources_dir``."""
     direct = Path(source).expanduser()
-    if direct.is_dir():
+    if direct.exists():
         return direct
     candidate = sources_dir / source
-    if candidate.is_dir():
+    if candidate.exists():
         return candidate
     raise LoaderError(
-        f"{source!r} is not a folder, nor a folder inside {sources_dir}/. "
+        f"{source!r} is not a folder or file, nor one inside {sources_dir}/. "
         "Run 'nostos list' to see what is available."
     )
 
@@ -76,7 +67,8 @@ def resolve_source(source: str, sources_dir: Path) -> Path:
 def _load(args: argparse.Namespace) -> Conversation:
     path = resolve_source(args.source, args.sources)
     started = time.perf_counter()
-    conversation = loaders.load(path, args.platform).in_timezone(args.tz)
+    # --tz is also how WhatsApp's times, which have no timezone, are read.
+    conversation = loaders.load(path, args.platform, timezone=args.tz).in_timezone(args.tz)
     if args.verbose:
         print(
             f"Loaded {len(conversation):,} messages from {path} in "
@@ -90,13 +82,12 @@ def cmd_list(args: argparse.Namespace) -> int:
     if not args.sources.is_dir():
         print(f"No sources folder at {args.sources}/", file=sys.stderr)
         return 1
-    folders = sorted(p for p in args.sources.iterdir() if p.is_dir())
     found = False
-    for folder in folders:
-        platform = next((ld.name for ld in loaders.LOADERS if ld.can_load(folder)), None)
-        if platform:
+    for entry in sorted(args.sources.iterdir()):
+        loader = loaders.detect(entry)
+        if loader:
             found = True
-            print(f"{folder.name}\t({platform})")
+            print(f"{entry.name}\t({loader.name})")
     if not found:
         print(f"No conversations found in {args.sources}/", file=sys.stderr)
     return 0
@@ -152,7 +143,9 @@ def _write_page(page: str, output: Path, open_browser: bool) -> None:
 
 
 def _default_output(args: argparse.Namespace, suffix: str) -> Path:
-    return Path(f"{Path(args.source).name}-{suffix}.html")
+    source = Path(args.source)
+    name = source.stem if source.suffix.lower() == ".txt" else source.name
+    return Path(f"{name}-{suffix}.html")
 
 
 def cmd_charts(args: argparse.Namespace) -> int:
@@ -205,11 +198,13 @@ def build_parser() -> argparse.ArgumentParser:
         "--sources",
         type=Path,
         default=DEFAULT_SOURCES,
-        help="folder holding one sub-folder per conversation (default: %(default)s)",
+        help="folder holding your conversations (default: %(default)s)",
     )
 
     common = argparse.ArgumentParser(add_help=False, parents=[sources])
-    common.add_argument("source", help="conversation folder, or its name inside --sources")
+    common.add_argument(
+        "source", help="conversation folder or WhatsApp .txt file, or its name in --sources"
+    )
     common.add_argument(
         "--platform",
         choices=[ld.name for ld in loaders.LOADERS],
@@ -219,7 +214,8 @@ def build_parser() -> argparse.ArgumentParser:
         "--tz",
         type=parse_timezone,
         default=local_timezone(),
-        help="IANA timezone for dates and hours, e.g. Europe/Athens (default: this machine's)",
+        help="IANA timezone for dates and hours, e.g. Europe/Athens (default: this machine's); "
+        "WhatsApp times are also read in it",
     )
     common.add_argument(
         "--max-gap",

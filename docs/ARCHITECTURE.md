@@ -3,8 +3,10 @@
 ```
             ┌───────────────┐   Conversation    ┌────────────┐  tables / scalars  ┌──────────────┐
  export ──▶ │   loaders/    │ ────────────────▶ │  analysis/ │ ─────────────────▶ │ report.py    │──▶ text / JSON
- folder     │ messenger.py  │  (schema.py)      │ pure funcs │                    │ charts/      │──▶ html / png
-            └───────────────┘                   └────────────┘                    └──────────────┘
+            │ messenger.py  │  (schema.py)      │ pure funcs │                    │ charts/      │──▶ html / png
+            │ instagram.py  │                   └────────────┘                    └──────────────┘
+            │ whatsapp.py   │
+            └───────────────┘
                                                                                          ▲
                                                        cli.py: parses flags, wires the layers together
 ```
@@ -14,7 +16,7 @@ Each layer only depends on the ones to its left.
 | Module | Responsibility | Must not |
 |---|---|---|
 | `schema.py` | The canonical `Conversation`: a Polars frame with `timestamp` (tz-aware), `sender`, `text`, `kind` | know about any platform |
-| `loaders/` | Turn one platform's export into a `Conversation`. Registry in `loaders/__init__.py` | compute statistics |
+| `loaders/` | Turn one platform's export into a `Conversation`. Registry and format detection in `loaders/__init__.py` | compute statistics |
 | `analysis/` | Pure, vectorized functions: `DataFrame -> DataFrame \| scalar` | print, plot, read files |
 | `report.py` | Run every analysis once, return JSON-serialisable data; render it as text or JSON | do I/O |
 | `charts/theme.py` | Colour and type tokens for light and dark | know about charts |
@@ -27,11 +29,22 @@ Each layer only depends on the ones to its left.
 - **Polars, not pandas or pure Python.** All statistics are columnar expressions
   run in Rust. Text-heavy work (tokenising, word counts) uses Polars' streaming
   engine, which spreads it across all CPU cores.
-- **One canonical schema.** Adding Instagram or WhatsApp means writing a loader
-  that outputs the same four columns; analysis, report, plots and CLI work
-  unchanged.
+- **One canonical schema.** Each platform is a loader that outputs the same four
+  columns; analysis, report, plots and CLI never see platform differences.
 - **Timezone is applied once.** Loaders emit UTC; `Conversation.in_timezone()`
   converts before analysis, so "messages per hour" means the user's local hours.
+  WhatsApp writes local times with no zone, so its loader reads them in the zone
+  passed as `load(path, timezone=...)` (the CLI passes `--tz`), which shows them
+  exactly as the phone did.
+- **Platforms are told apart by content, not by flags.** `loaders.detect()` asks
+  each loader in `LOADERS` order whether it recognises a path. Instagram and
+  Messenger share Meta's JSON format, so Instagram goes first and looks for the
+  `your_instagram_activity` download folder or traces only Instagram leaves
+  (reaction notices, `original_content_owner`); Messenger is the fallback. WhatsApp
+  files are recognised by their first lines. `--platform` overrides detection.
+- **Platform noise is removed in the loader.** Instagram's "Reacted 😂 to your
+  message" notices and WhatsApp's encryption and group notices are not messages, so
+  loaders drop them rather than leaving every analysis to filter them out.
 - **Tidy outputs.** Per-participant results are long tables
   (`period, sender, messages`), which serialize directly to JSON for a future
   web front end; plotting pivots them as needed.
@@ -55,11 +68,14 @@ Each layer only depends on the ones to its left.
 ## Adding a platform
 
 1. Create `loaders/<platform>.py` with a class that has `name`, `can_load(path)`
-   and `load(path) -> Conversation` (see `loaders/base.py`).
+   and `load(path, *, timezone=None) -> Conversation` (see `loaders/base.py`).
+   `timezone` only matters if the export stores times without a zone.
 2. Build a frame with the four schema columns and return
    `Conversation.from_frame(frame, title=..., platform=name)`.
-3. Register an instance in `LOADERS` in `loaders/__init__.py`.
-4. Add fixture-based tests in `tests/test_<platform>_loader.py`.
+3. Register an instance in `LOADERS` in `loaders/__init__.py`. Order matters for
+   detection: put it before any loader that would also accept its exports.
+4. Add tests in `tests/test_<platform>_loader.py` with small, hand-written
+   fixtures. Never copy real chats into tests.
 
 ## Performance
 
@@ -80,6 +96,11 @@ python benchmarks/run.py /tmp/bench
 End to end, including Python start-up, `nostos report` takes about 1.2 s and
 `nostos dashboard` about 2.7 s.
 
+These numbers are for Messenger; Instagram uses the same parser.
 Most of the load time is JSON parsing (orjson) plus undoing Messenger's
 double-encoded text, which has to happen per string in Python. Parsing files in
 parallel worker processes is the next step if that ever matters.
+
+WhatsApp exports are parsed line by line in Python: about 3.3 s for 300,000
+messages on the same machine, well under a second for typical chats. Vectorising
+the header parsing with Polars string expressions is the next step if that matters.
