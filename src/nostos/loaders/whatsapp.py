@@ -55,7 +55,11 @@ _SYSTEM = re.compile(
 )
 _DELETED = frozenset({"this message was deleted", "you deleted this message"})
 _ATTACHED = re.compile(r"^<attached: (?P<a>[^>]+)>|^(?P<b>\S[^\n]*?) \(file attached\)")
-_OMITTED = re.compile(r"(?:^|\s)(image|video|audio|sticker|gif|document|contact card) omitted$")
+_PLACEHOLDER = r"(image|video|audio|sticker|gif|document|contact card) omitted"
+# Unmarked: only a whole one-line message, so a sentence ending in "image omitted" stays text.
+_OMITTED = re.compile(rf"(?:^|\s){_PLACEHOLDER}$")
+# Marked (iPhone): reliable anywhere at the end, also after a multi-line caption.
+_MARKED_OMITTED = re.compile(rf"{_MARK}{_PLACEHOLDER}\s*$", re.IGNORECASE)
 _OMITTED_KINDS = {
     "image": MessageKind.PHOTO,
     "video": MessageKind.VIDEO,
@@ -158,6 +162,11 @@ def _file_kind(name: str) -> MessageKind:
 def _classify(body: str) -> tuple[str, str | None] | None:  # noqa: PLR0911
     """The kind and text of a message body, or None for a system notice."""
     marked = body.startswith(_MARK)
+    if match := _MARKED_OMITTED.search(body):
+        kind = _OMITTED_KINDS[match[1].lower()]
+        # Text before a photo or video is its caption; before a document, its file name.
+        caption = body[: match.start()].translate(_INVISIBLE).strip()
+        return kind.value, caption if caption and kind != MessageKind.FILE else None
     text = _EDITED.sub("", body.translate(_INVISIBLE)).strip()
     low = text.lower()
     if not text:

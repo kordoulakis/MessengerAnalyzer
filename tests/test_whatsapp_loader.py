@@ -30,6 +30,8 @@ So does this one.
 [04/02/2024, 08:05:00] Ben: {LRM}Ben changed their phone number to a new number.
 [04/02/2024, 08:06:00] ~{NNBSP}Cam: location: https://maps.example.com/?q=1,2
 [04/02/2024, 08:07:00] Ana: {LRM}notes.pdf • {LRM}2 pages {LRM}document omitted
+[04/02/2024, 08:08:00] Ben: Look at this
+view from the top {LRM}image omitted
 """
 
 ANDROID = f"""\
@@ -74,9 +76,16 @@ def test_iphone_export() -> None:
         "text",
         "share",
         "file",
+        "photo",
     ]
     assert m["text"][6] == "Fixed it"
+    assert m["text"][9] == "Look at this\nview from the top"  # a photo's caption
     assert m["text"].null_count() == 5  # media, call and deleted messages have no text
+
+
+def test_unmarked_placeholder_text_inside_a_message_stays_text() -> None:
+    conv = parse("1/2/23, 10:00 - Ana: The caption said\nimage omitted")
+    assert kinds(conv) == ["text"]
 
 
 def test_android_export_with_12_hour_clock_and_month_first() -> None:
@@ -163,7 +172,7 @@ def test_file_and_folder_layouts(tmp_path: Path, relative_path: str, title: str)
     for path in (file, file.parent):
         assert loader.can_load(path)
         conv = loaders.load(path, timezone="UTC")
-        assert (conv.platform, conv.title, len(conv)) == ("whatsapp", title, 9)
+        assert (conv.platform, conv.title, len(conv)) == ("whatsapp", title, 10)
 
 
 def test_byte_order_mark_and_windows_line_endings(tmp_path: Path) -> None:
@@ -204,4 +213,4 @@ def test_cli_lists_and_reports_chat_files(
     assert code == 0
     out = capsys.readouterr().out
     assert "Conversation: Ana (whatsapp)" in out
-    assert "Total messages: 9" in out
+    assert "Total messages: 10" in out
