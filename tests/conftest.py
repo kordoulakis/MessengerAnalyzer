@@ -7,8 +7,8 @@ from typing import Any
 
 import pytest
 
-from messenger_analyzer.loaders.messenger import MessengerLoader
-from messenger_analyzer.schema import Conversation
+from nostos.loaders.messenger import MessengerLoader
+from nostos.schema import Conversation
 
 
 def ms(year: int, month: int, day: int, hour: int = 12, minute: int = 0) -> int:

@@ -3,9 +3,9 @@ requires = ["hatchling>=1.24"]
 build-backend = "hatchling.build"
 
 [project]
-name = "messenger-analyzer"
+name = "nostos"
 dynamic = ["version"]
-description = "Statistics and charts for Facebook Messenger chat exports"
+description = "Look back on your conversations: statistics and interactive charts from chat exports"
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
@@ -37,17 +37,17 @@ dev = [
 ]
 
 [project.scripts]
-msganalyzer = "messenger_analyzer.cli:main"
+nostos = "nostos.cli:main"
 
 [tool.hatch.version]
-path = "src/messenger_analyzer/__init__.py"
+path = "src/nostos/__init__.py"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra --strict-markers"
 
 [tool.coverage.run]
-source = ["messenger_analyzer"]
+source = ["nostos"]
 
 [tool.ruff]
 line-length = 100
@@ -60,9 +60,9 @@ ignore = ["PLR0913", "PLR2004", "RUF001", "RUF002", "RUF003"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["PLR0915", "PLC0415"]
-"src/messenger_analyzer/cli.py" = ["PLC0415"]
-"src/messenger_analyzer/charts/html.py" = ["E501", "PLC0415"]  # embedded CSS
-"src/messenger_analyzer/charts/figures.py" = ["E501"]  # chart registry descriptions
+"src/nostos/cli.py" = ["PLC0415"]
+"src/nostos/charts/html.py" = ["E501", "PLC0415"]  # embedded CSS
+"src/nostos/charts/figures.py" = ["E501"]  # chart registry descriptions
 
 [tool.mypy]
 python_version = "3.10"

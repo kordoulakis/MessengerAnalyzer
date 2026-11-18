@@ -5,8 +5,8 @@ from datetime import date, timedelta
 import polars as pl
 import pytest
 
-from messenger_analyzer import analysis as an
-from messenger_analyzer.schema import Conversation
+from nostos import analysis as an
+from nostos.schema import Conversation
 
 
 @pytest.fixture

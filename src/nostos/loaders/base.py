@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Protocol
 
-from messenger_analyzer.schema import Conversation
+from nostos.schema import Conversation
 
 
 class LoaderError(Exception):

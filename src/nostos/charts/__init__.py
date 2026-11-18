@@ -1,6 +1,6 @@
 """Interactive charts (Plotly): single-chart pages, a dashboard, and image export.
 
-Requires the ``charts`` extra (``pip install 'messenger-analyzer[charts]'``);
+Requires the ``charts`` extra (``pip install 'nostos[charts]'``);
 image export additionally needs ``kaleido`` and a Chrome/Chromium browser.
 """
 
@@ -8,9 +8,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from messenger_analyzer import analysis as an
-from messenger_analyzer.analysis.activity import period_range
-from messenger_analyzer.charts.figures import (
+from nostos import analysis as an
+from nostos.analysis.activity import period_range
+from nostos.charts.figures import (
     CHARTS,
     Chart,
     ChartOptions,
@@ -18,10 +18,10 @@ from messenger_analyzer.charts.figures import (
     build,
     kept_senders,
 )
-from messenger_analyzer.charts.html import Kpi, PlotlyJS, Section, ThemeMode, render_page
-from messenger_analyzer.charts.theme import DARK, LIGHT, THEMES, ThemeName
-from messenger_analyzer.report import format_duration
-from messenger_analyzer.schema import Conversation
+from nostos.charts.html import Kpi, PlotlyJS, Section, ThemeMode, render_page
+from nostos.charts.theme import DARK, LIGHT, THEMES, ThemeName
+from nostos.report import format_duration
+from nostos.schema import Conversation
 
 IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp", ".svg", ".pdf"}
 
@@ -135,7 +135,9 @@ def export_image(
     selected = THEMES[theme]
     chart = build(conv, name, opts, selected)
     fig = chart.figure
-    top = 96 + (40 if fig.layout.legend and any(t.showlegend is not False for t in fig.data) else 0)
+    # Plotly draws a legend when two or more traces can appear in it; leave room for it.
+    legend_traces = [t for t in fig.data if t.showlegend is not False and t.type != "heatmap"]
+    top = 96 + (40 if len(legend_traces) >= 2 else 0)
     fig.update_layout(
         title={
             "text": chart.title,
@@ -155,10 +157,25 @@ def export_image(
         height=chart.height + top,
     )
     try:
-        fig.write_image(path, scale=scale)
+        import kaleido  # noqa: PLC0415 - optional dependency, only needed for export
+
+        # Call kaleido directly: through plotly it would load MathJax from a CDN,
+        # and export must not touch the network. plotly.js comes from the local
+        # plotly package.
+        image = kaleido.calc_fig_sync(
+            fig.to_dict(),
+            opts={
+                "format": path.suffix.lower().lstrip("."),
+                "width": width,
+                "height": chart.height + top,
+                "scale": scale,
+            },
+            kopts={"mathjax": False},
+        )
+        path.write_bytes(image)
     except Exception as exc:  # kaleido raises various errors when Chrome is missing
         raise ExportError(
-            "Image export needs kaleido and Chrome: pip install 'messenger-analyzer[export]', "
+            "Image export needs kaleido and Chrome: pip install 'nostos[export]', "
             f"then run plotly_get_chrome. ({exc})"
         ) from exc
 

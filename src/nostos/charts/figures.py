@@ -16,10 +16,10 @@ from typing import Any
 import plotly.graph_objects as go
 import polars as pl
 
-from messenger_analyzer import analysis as an
-from messenger_analyzer.charts.theme import Theme, base_layout, colorscale
-from messenger_analyzer.report import format_duration
-from messenger_analyzer.schema import Conversation
+from nostos import analysis as an
+from nostos.charts.theme import Theme, base_layout, colorscale
+from nostos.report import format_duration
+from nostos.schema import Conversation
 
 OTHER = "Other"
 MAX_SERIES = 8

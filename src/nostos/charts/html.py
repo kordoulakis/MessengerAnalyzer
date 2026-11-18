@@ -18,7 +18,7 @@ from typing import Literal
 import plotly.io as pio
 import polars as pl
 
-from messenger_analyzer.charts.figures import Chart
+from nostos.charts.figures import Chart
 
 ThemeMode = Literal["auto", "light", "dark"]
 PlotlyJS = Literal["inline", "cdn"]
@@ -136,7 +136,7 @@ _JS = """
   const config = { responsive: true, displaylogo: false,
                    modeBarButtonsToRemove: ["lasso2d", "select2d", "autoScale2d"] };
   try {
-    const saved = localStorage.getItem("msganalyzer-theme");
+    const saved = localStorage.getItem("nostos-theme");
     if (saved === "auto" || saved === "light" || saved === "dark") root.dataset.theme = saved;
   } catch (e) {}
   function mode() {
@@ -167,7 +167,7 @@ _JS = """
   button.addEventListener("click", function () {
     const order = ["auto", "light", "dark"];
     root.dataset.theme = order[(order.indexOf(root.dataset.theme) + 1) % order.length];
-    try { localStorage.setItem("msganalyzer-theme", root.dataset.theme); } catch (e) {}
+    try { localStorage.setItem("nostos-theme", root.dataset.theme); } catch (e) {}
     draw();
   });
   media.addEventListener("change", function () { if (root.dataset.theme === "auto") draw(); });
@@ -215,10 +215,10 @@ def render_page(
     )
 
     footer = (
-        "Generated locally by msganalyzer. This page loads plotly.js from cdn.plot.ly; "
+        "Generated locally by Nostos. This page loads plotly.js from cdn.plot.ly; "
         "your data stays in the file."
         if plotly_js == "cdn"
-        else "Generated locally by msganalyzer. This page loads nothing from the internet."
+        else "Generated locally by Nostos. This page loads nothing from the internet."
     )
     return f"""<!doctype html>
 <html lang="en" data-theme="{theme}">

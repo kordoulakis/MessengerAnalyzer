@@ -60,20 +60,23 @@ Each layer only depends on the ones to its left.
 
 ## Performance
 
-Measured on a synthetic 300,000-message, two-person export (65 MB, 30 files,
+Measured on a synthetic 300,000-message, three-person export (66 MB, 31 files,
 mostly non-ASCII text) on a 4-core machine. Reproduce with:
 
 ```bash
-python benchmarks/generate_sample.py /tmp/bench --messages 300000
+python benchmarks/generate_sample.py /tmp/bench --messages 300000 --participants 3
 python benchmarks/run.py /tmp/bench
 ```
 
-| Step | v1 (`main.py`) | v2 |
-|---|---|---|
-| Load + fix encoding | 0.58 s | 0.57 s |
-| Full report | 2.30 s | 0.21 s |
+| Step | Time |
+|---|---|
+| Load and fix encoding | 0.57 s |
+| Full report (every statistic) | 0.22 s |
+| Dashboard (every chart, both themes) | 1.04 s |
 
-Loading is now the bottleneck, and most of it is JSON parsing (orjson) plus
-undoing Messenger's double-encoded text, which has to happen per string in
-Python. Parsing files in parallel worker processes is the next step if that
-ever matters.
+End to end, including Python start-up, `nostos report` takes about 1.2 s and
+`nostos dashboard` about 2.7 s.
+
+Most of the load time is JSON parsing (orjson) plus undoing Messenger's
+double-encoded text, which has to happen per string in Python. Parsing files in
+parallel worker processes is the next step if that ever matters.

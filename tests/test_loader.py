@@ -4,9 +4,9 @@ from pathlib import Path
 
 import pytest
 
-from messenger_analyzer import loaders
-from messenger_analyzer.loaders.messenger import MessengerLoader, find_message_files, fix_mojibake
-from messenger_analyzer.schema import Conversation
+from nostos import loaders
+from nostos.loaders.messenger import MessengerLoader, find_message_files, fix_mojibake
+from nostos.schema import Conversation
 
 from .conftest import MESSAGES, ms, write_export
 
@@ -98,5 +98,16 @@ def test_registry(export_dir: Path, tmp_path: Path) -> None:
     assert loaders.load(export_dir).platform == "messenger"
     with pytest.raises(loaders.LoaderError, match="Unknown platform"):
         loaders.get_loader("carrier-pigeon")
-    with pytest.raises(loaders.LoaderError, match="No loader"):
+    with pytest.raises(loaders.LoaderError, match="No chat export found"):
         loaders.load(tmp_path / "missing")
+
+
+def test_unrecognised_folders_explain_the_mistake(export_dir: Path, tmp_path: Path) -> None:
+    html_export = tmp_path / "html"
+    html_export.mkdir()
+    (html_export / "message_1.html").write_text("<html></html>")
+    with pytest.raises(loaders.LoaderError, match="HTML export"):
+        loaders.load(html_export)
+    # export_dir's parent is like Facebook's inbox folder: conversations, not messages.
+    with pytest.raises(loaders.LoaderError, match=r"holds 1 conversation \(chat\)"):
+        loaders.load(export_dir.parent)

@@ -9,7 +9,7 @@ import argparse
 import time
 from pathlib import Path
 
-from messenger_analyzer import loaders, report
+from nostos import loaders, report
 
 
 def main() -> None:

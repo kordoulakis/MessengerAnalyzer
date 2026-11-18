@@ -10,8 +10,8 @@ from typing import Any
 import orjson
 import polars as pl
 
-from messenger_analyzer.loaders.base import LoaderError
-from messenger_analyzer.schema import KIND_DTYPE, Conversation, MessageKind
+from nostos.loaders.base import LoaderError
+from nostos.schema import KIND_DTYPE, Conversation, MessageKind
 
 _FILE_PATTERN = re.compile(r"^message_(\d+)\.json$", re.IGNORECASE)
 

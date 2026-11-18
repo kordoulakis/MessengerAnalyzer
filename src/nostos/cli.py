@@ -1,4 +1,4 @@
-"""Command-line interface: ``msganalyzer {list,report,charts,plot,dashboard}``."""
+"""Command-line interface: ``nostos {list,report,charts,plot,dashboard}``."""
 
 from __future__ import annotations
 
@@ -14,10 +14,10 @@ from types import ModuleType
 from typing import Any
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from messenger_analyzer import __version__, loaders
-from messenger_analyzer.analysis import UNITS
-from messenger_analyzer.loaders import LoaderError
-from messenger_analyzer.schema import Conversation
+from nostos import __version__, loaders
+from nostos.analysis import UNITS
+from nostos.loaders import LoaderError
+from nostos.schema import Conversation
 
 DEFAULT_SOURCES = Path("MessagesSources")
 
@@ -69,7 +69,7 @@ def resolve_source(source: str, sources_dir: Path) -> Path:
         return candidate
     raise LoaderError(
         f"{source!r} is not a folder, nor a folder inside {sources_dir}/. "
-        "Run 'msganalyzer list' to see what is available."
+        "Run 'nostos list' to see what is available."
     )
 
 
@@ -103,7 +103,7 @@ def cmd_list(args: argparse.Namespace) -> int:
 
 
 def cmd_report(args: argparse.Namespace) -> int:
-    from messenger_analyzer import report
+    from nostos import report
 
     conversation = _load(args)
     started = time.perf_counter()
@@ -127,9 +127,9 @@ class CliError(Exception):
 
 def _charts() -> ModuleType:
     try:
-        from messenger_analyzer import charts
+        from nostos import charts
     except ImportError as exc:  # pragma: no cover - depends on the environment
-        raise CliError("Charts need plotly: pip install 'messenger-analyzer[charts]'") from exc
+        raise CliError("Charts need plotly: pip install 'nostos[charts]'") from exc
     return charts
 
 
@@ -165,7 +165,7 @@ def cmd_charts(args: argparse.Namespace) -> int:
 def cmd_plot(args: argparse.Namespace) -> int:
     charts = _charts()
     if args.chart not in charts.CHARTS:
-        raise CliError(f"Unknown chart {args.chart!r}. Run 'msganalyzer charts' for the list.")
+        raise CliError(f"Unknown chart {args.chart!r}. Run 'nostos charts' for the list.")
     conversation = _load(args)
     options = _chart_options(args, charts)
     output: Path = args.output or _default_output(args, args.chart)
@@ -200,7 +200,8 @@ def cmd_dashboard(args: argparse.Namespace) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="msganalyzer", description="Statistics and charts for chat exports."
+        prog="nostos",
+        description="Nostos: look back on your conversations with statistics and charts.",
     )
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
 
@@ -279,7 +280,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     p = sub.add_parser("plot", parents=[common, html], help="draw one interactive chart")
-    p.add_argument("chart", help="chart name; see 'msganalyzer charts'")
+    p.add_argument("chart", help="chart name; see 'nostos charts'")
     p.add_argument(
         "-o",
         "--output",

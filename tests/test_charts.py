@@ -5,12 +5,12 @@ from pathlib import Path
 import polars as pl
 import pytest
 
-from messenger_analyzer.charts import CHARTS, ChartOptions, chart_page
-from messenger_analyzer.charts.figures import MAX_SERIES, OTHER, build, kept_senders, sender_colors
-from messenger_analyzer.charts.html import table_html
-from messenger_analyzer.charts.theme import DARK, LIGHT
-from messenger_analyzer.loaders.messenger import MessengerLoader
-from messenger_analyzer.schema import Conversation
+from nostos.charts import CHARTS, ChartOptions, chart_page
+from nostos.charts.figures import MAX_SERIES, OTHER, build, kept_senders, sender_colors
+from nostos.charts.html import table_html
+from nostos.charts.theme import DARK, LIGHT
+from nostos.loaders.messenger import MessengerLoader
+from nostos.schema import Conversation
 
 from .conftest import ms, write_export
 

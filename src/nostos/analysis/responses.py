@@ -13,7 +13,7 @@ from datetime import timedelta
 
 import polars as pl
 
-from messenger_analyzer.analysis.activity import period_expr, period_range, senders
+from nostos.analysis.activity import period_expr, period_range, senders
 
 UNITS: dict[str, float] = {"seconds": 1.0, "minutes": 60.0, "hours": 3600.0}
 

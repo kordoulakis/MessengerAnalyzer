@@ -8,8 +8,8 @@ from pathlib import Path
 import polars as pl
 import pytest
 
-from messenger_analyzer import analysis as an
-from messenger_analyzer.loaders.messenger import MessengerLoader, fix_mojibake
+from nostos import analysis as an
+from nostos.loaders.messenger import MessengerLoader, fix_mojibake
 
 from .conftest import mangle, ms, write_export
 
@@ -90,7 +90,7 @@ def test_word_statistics_handle_non_latin_scripts(multilingual: pl.DataFrame) ->
 
 
 def test_report_json_keeps_unicode(multilingual: pl.DataFrame, tmp_path: Path) -> None:
-    from messenger_analyzer.cli import main
+    from nostos.cli import main
 
     out = tmp_path / "r.json"
     assert main(["report", str(tmp_path / "intl"), "--format", "json", "-o", str(out)]) == 0

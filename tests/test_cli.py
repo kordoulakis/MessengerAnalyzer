@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from messenger_analyzer.charts import CHARTS
-from messenger_analyzer.cli import main, parse_duration
+from nostos.charts import CHARTS
+from nostos.cli import main, parse_duration
 
 from .conftest import ms, write_export
 

@@ -1,12 +1,12 @@
 """Pure, vectorized analysis functions.
 
 Every function takes the ``messages`` frame of a
-:class:`~messenger_analyzer.schema.Conversation` and returns a scalar or a tidy
+:class:`~nostos.schema.Conversation` and returns a scalar or a tidy
 :class:`polars.DataFrame`. Nothing here does I/O, printing or plotting, which
 keeps the functions easy to test and reusable from a future web API.
 """
 
-from messenger_analyzer.analysis.activity import (
+from nostos.analysis.activity import (
     WEEKDAYS,
     filter_keywords,
     messages_per_hour,
@@ -16,7 +16,7 @@ from messenger_analyzer.analysis.activity import (
     messages_per_weekday_hour,
     top_periods,
 )
-from messenger_analyzer.analysis.content import (
+from nostos.analysis.content import (
     average_words,
     average_words_per_month,
     average_words_per_sender,
@@ -26,7 +26,7 @@ from messenger_analyzer.analysis.content import (
     word_frequencies,
     word_occurrences,
 )
-from messenger_analyzer.analysis.responses import (
+from nostos.analysis.responses import (
     BUCKETS,
     UNITS,
     mean_response_time,

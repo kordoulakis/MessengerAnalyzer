@@ -13,8 +13,8 @@ from typing import Any
 
 import polars as pl
 
-from messenger_analyzer import analysis as an
-from messenger_analyzer.schema import Conversation
+from nostos import analysis as an
+from nostos.schema import Conversation
 
 
 def _records(frame: pl.DataFrame) -> list[dict[str, Any]]:

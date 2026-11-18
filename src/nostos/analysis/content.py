@@ -10,8 +10,8 @@ from collections.abc import Iterable
 
 import polars as pl
 
-from messenger_analyzer.analysis.activity import period_expr, period_range, senders
-from messenger_analyzer.schema import MessageKind
+from nostos.analysis.activity import period_expr, period_range, senders
+from nostos.schema import MessageKind
 
 #: A word is a run of letters/digits, optionally joined by apostrophes ("don't").
 WORD_PATTERN = r"\w+(?:['’]\w+)*"
