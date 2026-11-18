@@ -1,170 +1,97 @@
-<!--
-*** Thanks for checking out this README Template. If you have a suggestion that would
-*** make this better, please fork the repo and create a pull request or simply open
-*** an issue with the tag "enhancement".
-*** Thanks again! Now go create something AMAZING! :D
-***
-***
-***
-*** To avoid retyping too much info. Do a search and replace for the following:
-*** github_username, repo_name, twitter_handle, email
--->
-
-
-<!-- PROJECT SHIELDS -->
-<!--
-*** I'm using markdown "reference style" links for readability.
-*** Reference links are enclosed in brackets [ ] instead of parentheses ( ).
-*** See the bottom of this document for the declaration of the reference variables
-*** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
-*** https://www.markdownguide.org/basic-syntax/#reference-style-links
--->
-
-<!-- PROJECT LOGO -->
-<br />
 <p align="center">
-  <a href="https://github.com/github_username/repo_name">
-    <img src="images/logo.png" alt="Logo" width="450" height="240">
-  </a>
-
-  <h3 align="center">Messenger Analyzer</h3>
-
-  <p align="center">
-    An analyzer of messages
-    <br />
-    <a href="https://github.com/ShadehaterCS/TheMessengerProject/issues">Report Bug</a>
-    ·
-    <a href="https://github.com/ShadehaterCS/TheMessengerProject/issues">Request Feature</a>
-  </p>
+  <img src="images/logo.png" alt="Messenger Analyzer" width="450">
 </p>
 
+# Messenger Analyzer
 
+Statistics and charts for your Facebook Messenger conversations, from the
+command line. Everything runs locally; nothing is sent over the network.
 
-<!-- TABLE OF CONTENTS -->
-## Table of Contents
+- Messages per day, month, weekday and hour, overall or per participant
+- Response times (overall, per person, per month)
+- Words per message, most common words, keyword search
+- Message types: text, photos, videos, voice notes, calls, stickers, ...
+- Text or JSON reports, and charts saved as PNG/SVG/PDF or shown in a window
 
-* [About the Project](#about-the-project)
-  * [Built With](#built-with)
-* [Getting Started](#getting-started)
-  * [Prerequisites](#prerequisites)
-  * [Installation](#installation)
-* [Usage](#usage)
-* [Roadmap](#roadmap)
-* [Contributing](#contributing)
-* [License](#license)
-* [Example Visualization](#example-visualization)
+Handles conversations with hundreds of thousands of messages in about a second.
+Any number of participants works.
 
+## Install
 
-<!-- ABOUT THE PROJECT -->
-## About The Project
-**An analysis & plotting tool**  
-**This software does NOT use networking of any kind**  
-![example.gif](https://media.giphy.com/media/16nTbGPdl2bHO08okk/giphy.gif)
-### Built With
+Requires Python 3.10+.
 
-* []()Python 3
-* []()matplotlib
-* []()NumPy
-
-<!-- GETTING STARTED -->
-## Getting Started
-
-To get a local copy up and running follow these simple steps.
-
-### Prerequisites
-List:
-* Python 3
-* matplotlib
-```sh
-python -m pip install -U matplotlib
-```
-* NumPy
-```sh
-python -m pip install -U numpy
-```
-* Your FB data
-```sh
-see instructions below
+```bash
+git clone https://github.com/kordoulakis/MessengerAnalyzer.git
+cd MessengerAnalyzer
+python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -e ".[plot]"
 ```
 
-### Installation
+Leave out `[plot]` if you only need text/JSON reports.
 
-1. Clone the repo
-```sh
-git clone https://github.com/ShadehaterCS/MessengerAnalyzer.git
-```
-2. Install pip packages
-```sh
-pip install -r requirements.txt
-```
+## Get your data
 
-<!-- USAGE EXAMPLES -->
+1. Go to <https://facebook.com/dyi> (Settings → Your Facebook information → Download your information).
+2. Select only **Messages**, format **JSON**, date range **All time**.
+3. Unzip the download. Each conversation is a folder containing `message_1.json`,
+   `message_2.json`, ...
+4. Copy the conversation folders you want into `MessagesSources/` and give them
+   short names. That folder is git-ignored, so your chats are never committed.
+
 ## Usage
 
-You can use these scripts for structuring, extracting and visualizing your data taken from Facebook's Messenger.  
+```bash
+msganalyzer list                          # conversations found in MessagesSources/
+msganalyzer report alex                   # every statistic, as text
+msganalyzer report alex --format json -o alex.json
+msganalyzer charts                        # list available charts
+msganalyzer plot alex monthly --by-participant
+msganalyzer plot alex daily --keywords "coffee,beer" -o drinks.png
+msganalyzer plot alex responses-monthly --unit hours --max-gap 12h
+```
 
-It is **indifferent** as to how many people there are in a conversation, the plots and DS will work regardless.  
+`alex` can be a folder name inside `MessagesSources/` or any path to a
+conversation folder. Try it on the bundled sample: `msganalyzer report example`.
 
-The main use of this tool is to **plot** your data.  
+Useful options (see `msganalyzer <command> --help` for all):
 
-To do that, all you need to do is run main.py, input the folder's name where the JSON files are and you'll be presented with the oh so faithful press 1-5 menu.  
+| Option | Meaning |
+|---|---|
+| `--tz Europe/Athens` | Timezone for dates and hours (default: your computer's) |
+| `--max-gap 6h` | Ignore "responses" that come after a long silence; they are usually new conversations |
+| `--keywords a,b` | Count these words (`report`) or only chart messages containing them (`plot daily`) |
+| `--by-participant` / `--separate` | One series, or one panel, per participant |
+| `-o FILE` | Save instead of printing / opening a window |
+| `-v` | Print load and analysis timings |
 
-## Guide
-**First of all** you'll need to download your data through Facebook. Now, Facebook does allow you to only download your messages but it's a process. For more info on how to do that visit the link below
-* []() https://www.facebook.com/help/1701730696756992?helpref=hc_global_nav  
-**OR**  
-* []() *facebook.com -> Settings & Privacy -> Settings -> Your Facebook Information -> Access Your Information -> (top of page) download your information*  
-**OR**
-* []() **https://facebook.com/dyi**  
-* []() *Deselect* them all and then select only your Messages if that's all you want.
-* []() Make sure you choose download data as **JSON**
-* []() **Data Range**: All of my Data | **Format:** JSON | **Media Quality:** that's up to you  
+### As a library
 
-**Congratulations, you now have your data**  
-* []() Inside your downloaded .zip you'll see the folders you selected. We're interested in the messages one. Apparently the folders are named with fb username + a random uid.
-* []() Inside every folder you'll see one or more JSON files. Copy that folder and be ready to rename it because you can't be typing that whole thing.  
+```python
+from pathlib import Path
+from messenger_analyzer import loaders, analysis as an
 
-**Now go into the repo's folder**
-* []()You'll see that there is a folder named MessagesSources.  
-That's the folder the script is going to look into to find the folders containing your JSON files for every specific conversation.  
-Move your extracted folders inside that one and name it appropriately so there's no confusion for you.  
+conv = loaders.load(Path("MessagesSources/alex")).in_timezone("Europe/Athens")
+print(an.messages_per_period(conv.messages, "month", by_sender=True))
+print(an.top_words(conv.messages, 20))
+```
 
-**Now you can start**
-Open the folder in your preferred editor and run it through that or simply open *terminal / cmd* in the repo's folder  
-* []() Run *python main.py*  
-* []() Input your folder's name
-* []() The menu will pop up, you can use the available options through your keyboard 1-5 keys
-* []() Success  
-<!-- ROADMAP -->
+## Development
+
+```bash
+pip install -e . --group dev   # pip >= 25.1
+pytest                         # tests
+ruff check . && ruff format .  # lint and format
+mypy                           # type-check
+```
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the code is organised,
+how to add a new chat platform, and benchmark numbers.
+
 ## Roadmap
 
-As per v1 this codebase only supports Facebook's Messenger files and structure.  
-Some functionality for instagram's messaging will be added.
+- Instagram and WhatsApp exports
+- Web interface
 
-
-<!-- CONTRIBUTING -->
-## Contributing
-
-Contributions are what make the open source community such an amazing place to be learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-
-
-<!-- LICENSE -->
 ## License
 
-Distributed under the MIT License. See `LICENSE` for more information.
-
-<!-- EXAMPLE -->
-## Example Visualization
-![visualization.jpg](https://i.imgur.com/EROL1au.jpg)
-
-<!-- MARKDOWN LINKS & IMAGES -->
-<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[issues-url]: https://github.com/ShadehaterCS/MessengerAnalyzer/issues
-[license-url]: https://github.com/ShadehaterCS/MessengerAnalyzer/blob/master/LICENSE.txt
+MIT. See [LICENSE](LICENSE).

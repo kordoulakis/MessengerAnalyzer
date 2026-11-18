@@ -1,0 +1,22 @@
+# Your chat exports are private: only the bundled example is tracked.
+MessagesSources/*
+!MessagesSources/example/
+
+# Generated output
+*-stats.txt
+*.png
+!images/*.png
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
